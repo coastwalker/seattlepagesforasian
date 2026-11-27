@@ -14,9 +14,9 @@ export const ANCHOR_PRESETS = {
   '98074': { label: '98074 · Sammamish (Default)', zh: '98074 · 薩馬米什 (預設)', lat: 47.6205, lng: -122.0356 },
   '98004': { label: '98004 · Downtown Bellevue', zh: '98004 · 貝爾維尤市中心', lat: 47.6149, lng: -122.2015 },
   '98052': { label: '98052 · Redmond / Overlake', zh: '98052 · 雷德蒙德', lat: 47.6740, lng: -122.1215 },
-  '98104': { label: '98104 · Seattle Chinatown-ID', zh: '98104 · 西雅圖中國城', lat: 47.5982, lng: -122.3245 },
+  '98104': { label: '98104 · Seattle CID & Little Saigon', zh: '98104 · 西雅圖中國城 / 小西貢', lat: 47.5982, lng: -122.3215 },
   '98036': { label: '98036 · Lynnwood / Edmonds', zh: '98036 · 林伍德 / 埃德蒙茲', lat: 47.8209, lng: -122.3151 },
-  '98003': { label: '98003 · Federal Way', zh: '98003 · 聯邦大道', lat: 47.3134, lng: -122.3126 },
+  '98003': { label: '98003 · Federal Way / South', zh: '98003 · 聯邦大道 / 南區', lat: 47.3134, lng: -122.3126 },
   'gps':   { label: 'My Current Location (GPS)', zh: '我的當前位置 (GPS)', lat: null, lng: null }
 };
 
@@ -24,44 +24,46 @@ export const CATEGORIES = [
   { id: 'all',         en: 'All Listings',       zh: '全部名錄',     shortEn: 'All' },
   { id: 'restaurants', en: 'Restaurants',        zh: '餐廳美食',     shortEn: 'Dining' },
   { id: 'stores',      en: 'Stores & Markets',   zh: '超市百貨',     shortEn: 'Stores' },
-  { id: 'bakeries',    en: 'Bakeries & Tea',     zh: '烘焙茶飲',     shortEn: 'Bakery & Tea' },
+  { id: 'bakeries',    en: 'Bakeries & Tea',     zh: '烘焙咖啡茶飲', shortEn: 'Bakery & Cafe' },
   { id: 'barbers',     en: 'Barbers & Salons',   zh: '理髮美髮',     shortEn: 'Hair & Barber' },
   { id: 'nanny',       en: 'Nanny & Home Care',  zh: '月嫂家政',     shortEn: 'Nanny & Care' },
   { id: 'remodel',     en: 'Remodel & Home',     zh: '裝修建材',     shortEn: 'Remodel' },
-  { id: 'wellness',    en: 'Wellness & Spas',    zh: '中醫養生',     shortEn: 'Wellness' }
+  { id: 'wellness',    en: 'Wellness & Spas',    zh: '泰式按摩與中醫', shortEn: 'Wellness' }
 ];
 
 export const AREA_GROUPS = [
   { id: 'all',              en: 'All Areas (≤ 50 mi)',          zh: '全部地區 (50英里內)', cities: [] },
   { id: 'sammamish-iss',    en: 'Sammamish & Issaquah',         zh: '薩馬米什 / 伊薩誇',   cities: ['Sammamish', 'Issaquah', 'Fall City', 'Snoqualmie'] },
-  { id: 'redmond-kirkland', en: 'Redmond, Kirkland & Bothell',  zh: '雷德蒙德 / 柯克蘭',   cities: ['Redmond', 'Kirkland', 'Bothell', 'Woodinville'] },
+  { id: 'redmond-kirkland', en: 'Redmond, Kirkland & Bothell',  zh: '雷德蒙德 / 柯克蘭',   cities: ['Redmond', 'Kirkland', 'Bothell', 'Woodinville', 'Kenmore'] },
   { id: 'bellevue',         en: 'Bellevue & Factoria',          zh: '貝爾維尤 / Factoria', cities: ['Bellevue', 'Mercer Island', 'Newcastle'] },
-  { id: 'seattle-central',  en: 'Seattle (CID & Central)',      zh: '西雅圖中國城及市區',   cities: ['Seattle'] },
-  { id: 'south-king',       en: 'Renton, Kent & Tukwila',       zh: '倫頓 / 肯特 / 塔克維拉', cities: ['Renton', 'Kent', 'Tukwila', 'SeaTac', 'Auburn'] },
+  { id: 'seattle-central',  en: 'Seattle (CID, Little Saigon & City)', zh: '西雅圖市區及小西貢', cities: ['Seattle', 'White Center'] },
+  { id: 'south-king',       en: 'Renton, Kent, Tukwila & Burien', zh: '倫頓 / 肯特 / 塔克維拉', cities: ['Renton', 'Kent', 'Tukwila', 'SeaTac', 'Auburn', 'Burien', 'Des Moines'] },
   { id: 'north-sound',      en: 'Lynnwood, Edmonds & North',    zh: '林伍德 / 埃德蒙茲',   cities: ['Lynnwood', 'Edmonds', 'Shoreline', 'Mountlake Terrace', 'Everett', 'Mill Creek'] },
   { id: 'federal-tacoma',   en: 'Federal Way & Tacoma',         zh: '聯邦大道 / 塔科馬',   cities: ['Federal Way', 'Tacoma', 'Lakewood', 'Fife', 'Puyallup'] }
 ];
 
 export const ORIGINS = [
-  { id: 'all',            en: 'All East Asian',  zh: '全部東亞文化' },
-  { id: 'Chinese',        en: 'Chinese',         zh: '中式 / 華人' },
-  { id: 'Taiwanese',      en: 'Taiwanese',       zh: '台式 / 台灣' },
-  { id: 'Japanese',       en: 'Japanese',        zh: '日式 / 日本' },
-  { id: 'Korean',         en: 'Korean',          zh: '韓式 / 韓國' },
-  { id: 'Cantonese',      en: 'Cantonese / HK',  zh: '粵式 / 港式' },
-  { id: 'Pan-East Asian', en: 'Pan-East Asian',  zh: '綜合東亞' }
+  { id: 'all',        en: 'All Origins',    zh: '全部文化菜系' },
+  { id: 'Chinese',    en: 'Chinese',        zh: '中式 / 華人' },
+  { id: 'Taiwanese',  en: 'Taiwanese',      zh: '台式 / 台灣' },
+  { id: 'Japanese',   en: 'Japanese',       zh: '日式 / 日本' },
+  { id: 'Korean',     en: 'Korean',         zh: '韓式 / 韓國' },
+  { id: 'Vietnamese', en: 'Vietnamese',     zh: '越式 / 越南' },
+  { id: 'Thai',       en: 'Thai',           zh: '泰式 / 泰國' },
+  { id: 'Cantonese',  en: 'Cantonese / HK', zh: '粵式 / 港式' },
+  { id: 'Pan-Asian',  en: 'Pan-Asian',      zh: '綜合亞洲' }
 ];
 
 export const COPY = {
   en: {
     brandTitle: 'Seattle Asian Pages',
-    brandSubtitle: '50-Mile East Asian Index · Anchored at 98074',
-    searchPlaceholder: 'Search restaurants, grocers, barbers, yuesao, remodelers, dishes…',
+    brandSubtitle: '50-Mile Asian Index · Anchored at 98074',
+    searchPlaceholder: 'Search phở, Thai, dim sum, grocers, barbers, yuesao, remodelers…',
     savedBtn: 'Saved',
     suggestBtn: 'Suggest Place',
     heroEyebrow: 'Greater Seattle & Eastside Directory · 50-Mile Radius of ZIP 98074',
-    heroTitle: 'Every trusted East Asian table, market, craft & home service around Sammamish.',
-    heroLead: 'A curated regional index spanning Sammamish (98074), Bellevue, Redmond, Seattle Chinatown-ID, Lynnwood, Kent, and Federal Way—complete with verified Google Maps ratings, review counts, and community takeaways.',
+    heroTitle: 'Every trusted Asian table, market, craft & home service around Sammamish.',
+    heroLead: 'A curated regional index spanning Chinese, Taiwanese, Japanese, Korean, Vietnamese, and Thai communities across Sammamish (98074), Bellevue, Redmond, Seattle, Lynnwood, Renton, Kent, and Tacoma—complete with verified Google Maps ratings and review takeaways.',
     metricPlaces: 'Verified Places',
     metricCategories: 'Daily-Life Pillars',
     metricRadius: 'Mile Radius of 98074',
@@ -117,14 +119,14 @@ export const COPY = {
     emptyDesc: 'Try broadening your search keywords, expanding the distance radius, or resetting active filters.'
   },
   zh: {
-    brandTitle: '西雅圖東亞生活黃頁',
-    brandSubtitle: '98074 為中心 · 50英里東亞生活與服務索引',
-    searchPlaceholder: '搜尋餐廳、華人超市、麵包奶茶、理髮、月嫂家政、裝修建材…',
+    brandTitle: '西雅圖亞洲生活黃頁',
+    brandSubtitle: '98074 為中心 · 50英里東亞與越泰生活索引',
+    searchPlaceholder: '搜尋越南河粉、泰式料理、中餐、超市、麵包咖啡、理髮、月嫂、裝修…',
     savedBtn: '收藏夾',
     suggestBtn: '推薦商家',
     heroEyebrow: '大西雅圖與東區生活指南 · 郵編 98074 方圓 50 英里全覆蓋',
-    heroTitle: '匯聚薩馬米什與大西雅圖值得信賴的東亞美食、超市、匠人與居家服務。',
-    heroLead: '覆蓋 Sammamish (98074)、Bellevue、Redmond、西雅圖中國城、Lynnwood、Kent 與 Federal Way，整合 Google Maps 真實評分、評論總數與口碑摘要。',
+    heroTitle: '匯聚薩馬米什與大西雅圖值得信賴的東亞及越泰美食、超市、匠人與居家服務。',
+    heroLead: '涵蓋中式、台式、日式、韓式、越式與泰式精選機構，覆蓋 Sammamish (98074)、Bellevue、Redmond、西雅圖、Lynnwood、Renton、Kent 與 Tacoma，整合 Google Maps 真實評分、評論總數與口碑摘要。',
     metricPlaces: '精選實體與服務',
     metricCategories: '核心生活分類',
     metricRadius: '英里覆蓋 (98074)',

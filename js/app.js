@@ -269,7 +269,11 @@ function getFilteredPlaces() {
 
     if (state.origin !== 'all') {
       const pOrig = (p.origin || '').toLowerCase();
-      if (!pOrig.includes(state.origin.toLowerCase())) return false;
+      if (state.origin === 'Pan-Asian') {
+        if (!pOrig.includes('pan-asian') && !pOrig.includes('pan-east asian')) return false;
+      } else if (!pOrig.includes(state.origin.toLowerCase())) {
+        return false;
+      }
     }
 
     if (state.minRating > 0) {
@@ -1100,9 +1104,11 @@ function initEvents() {
       const qCat = chip.getAttribute('data-quick-cat');
       const qDist = chip.getAttribute('data-quick-dist');
       const qQuery = chip.getAttribute('data-quick-query');
+      const qOrigin = chip.getAttribute('data-quick-origin');
       if (qCat) state.category = qCat;
       if (qDist) state.maxDistance = Number(qDist);
       if (qQuery) state.query = qQuery;
+      if (qOrigin) state.origin = qOrigin;
       syncInputs();
       renderAll();
       document.getElementById('catalog-results-anchor')?.scrollIntoView({ behavior: 'smooth' });
