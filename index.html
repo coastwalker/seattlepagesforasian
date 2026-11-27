@@ -162,6 +162,8 @@
           <div class="quick-search-row" aria-label="Popular quick filters">
             <span class="quick-search-label" id="ui-popular-label">Quick jumps:</span>
             <button type="button" class="quick-chip" id="ui-quick-near" data-quick-cat="all" data-quick-dist="6">Near 98074 (≤ 6 mi)</button>
+            <button type="button" class="quick-chip" id="ui-quick-japanese" data-quick-origin="Japanese">Japanese</button>
+            <button type="button" class="quick-chip" id="ui-quick-korean" data-quick-origin="Korean">Korean</button>
             <button type="button" class="quick-chip" id="ui-quick-viet" data-quick-origin="Vietnamese">Vietnamese</button>
             <button type="button" class="quick-chip" id="ui-quick-thai" data-quick-origin="Thai">Thai</button>
             <button type="button" class="quick-chip" id="ui-quick-dimsum" data-quick-query="Dim Sum">Dim Sum</button>
@@ -185,7 +187,7 @@
           </picture>
           <figcaption class="hero-artwork-caption">
             <span id="ui-art-caption-left">Anchor: Sammamish, WA · ZIP 98074</span>
-            <span class="tabular-nums" id="ui-art-caption-right">47.62° N, 122.04° W · 50 mi</span>
+            <span class="tabular-nums" id="ui-art-caption-right">50-Mile Radius</span>
           </figcaption>
         </figure>
       </div>
@@ -273,11 +275,18 @@
 
         <!-- Phone-Optimized Compact Controls Bar -->
         <div class="mobile-controls-bar">
-          <button type="button" id="mobile-open-filters-btn" class="icon-pill-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/><circle cx="6" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
-            <span id="ui-mobile-filters-btn">Filters &amp; Radius</span>
-            <span class="saved-count-badge tabular-nums" id="mobile-filter-count" hidden>0</span>
-          </button>
+          <div class="mobile-left-actions">
+            <button type="button" id="mobile-open-filters-btn" class="icon-pill-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/><circle cx="6" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
+              <span id="ui-mobile-filters-btn">Filters &amp; Radius</span>
+              <span class="saved-count-badge tabular-nums" id="mobile-filter-count" hidden>0</span>
+            </button>
+
+            <button type="button" id="mobile-nearest-btn" class="icon-pill-btn" aria-pressed="false" title="Sort by nearest distance">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+              <span id="ui-mobile-nearest-btn">Nearest</span>
+            </button>
+          </div>
 
           <div class="view-switcher" role="group" aria-label="Mobile display layout">
             <button type="button" class="view-btn" data-view="cards" aria-pressed="true">Cards</button>
@@ -456,6 +465,12 @@
       <button type="submit" class="drawer-cta drawer-cta-primary" id="ui-sug-submit-btn" style="width:100%;">Open Pre-filled GitHub Submission ↗</button>
     </form>
   </aside>
+
+  <!-- Floating Mobile Thumb-Friendly Back-to-Top Pill -->
+  <button type="button" class="back-to-top-fab" id="back-to-top-btn" aria-label="Scroll back to top" hidden>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+    <span id="ui-back-to-top">Top</span>
+  </button>
 
   <!-- Accessible Toast Notification -->
   <div class="toast-banner" id="toast-banner" role="status" aria-live="polite"></div>

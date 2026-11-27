@@ -1073,6 +1073,8 @@ function applyLanguage(lang) {
     'ui-metric-avg': c.metricAvgRating,
     'ui-popular-label': c.popularLabel,
     'ui-quick-near': c.quickNear,
+    'ui-quick-japanese': c.quickJapanese,
+    'ui-quick-korean': c.quickKorean,
     'ui-quick-viet': c.quickViet,
     'ui-quick-thai': c.quickThai,
     'ui-quick-dimsum': c.quickDimSum,
@@ -1105,6 +1107,8 @@ function applyLanguage(lang) {
     'ui-view-table': c.viewTable,
     'ui-view-map': c.viewMap,
     'ui-mobile-filters-btn': c.mobileFiltersBtn,
+    'ui-mobile-nearest-btn': c.mobileNearestBtn,
+    'ui-back-to-top': c.backToTopLabel,
     // Mobile Filter Sheet
     'mobile-filter-title': c.mobileFilterTitle,
     'ui-m-anchor-label': c.mobileAnchorLabel,
@@ -1164,9 +1168,9 @@ function applyLanguage(lang) {
   document.querySelectorAll('.mobile-controls-bar [data-view="map"]').forEach((el) => { el.textContent = c.viewMap; });
 
   renderSelectOptions();
+  syncInputs();
   renderAll();
 
-  // If detail drawer is currently open, re-render its content in the newly selected language!
   if (state.activePlaceId) {
     openDetailDrawer(state.activePlaceId, false, true);
   }
@@ -1213,6 +1217,13 @@ function syncInputs() {
   if (sSort) sSort.value = state.sortBy;
   if (mSort) mSort.value = state.sortBy;
 
+  const nearestBtn = document.getElementById('mobile-nearest-btn');
+  if (nearestBtn) {
+    const isNear = state.sortBy === 'nearest';
+    nearestBtn.classList.toggle('active', isNear);
+    nearestBtn.setAttribute('aria-pressed', String(isNear));
+  }
+
   document.querySelectorAll('[data-m-dist]').forEach((btn) => {
     btn.setAttribute('aria-pressed', String(Number(btn.getAttribute('data-m-dist')) === state.maxDistance));
   });
@@ -1222,6 +1233,20 @@ function syncInputs() {
 
   document.querySelectorAll('[data-view]').forEach((btn) => {
     btn.setAttribute('aria-pressed', String(btn.getAttribute('data-view') === state.viewMode));
+  });
+
+  // Highlight active Quick Jump chip
+  document.querySelectorAll('.quick-chip').forEach((chip) => {
+    const qCat = chip.getAttribute('data-quick-cat');
+    const qDist = chip.getAttribute('data-quick-dist');
+    const qQuery = chip.getAttribute('data-quick-query');
+    const qOrigin = chip.getAttribute('data-quick-origin');
+    let active = false;
+    if (qDist && state.maxDistance === Number(qDist) && state.category === 'all' && state.origin === 'all') active = true;
+    else if (qOrigin && state.origin === qOrigin && state.category === 'all' && state.maxDistance === 50) active = true;
+    else if (qQuery && state.query.toLowerCase() === qQuery.toLowerCase()) active = true;
+    else if (qCat && qCat !== 'all' && state.category === qCat && state.origin === 'all' && state.maxDistance === 50) active = true;
+    chip.classList.toggle('active', active);
   });
 }
 
@@ -1256,6 +1281,50 @@ function handleAnchorChange(newKey) {
   state.anchorKey = newKey;
   renderSelectOptions();
   renderAll();
+}
+
+/* ---------- Touch Swipe-Down Dismissal for Mobile Bottom Sheets ---------- */
+function enableBottomSheetSwipeClose(sheetEl) {
+  if (!sheetEl) return;
+  let startY = 0;
+  let currentY = 0;
+  let dragging = false;
+
+  sheetEl.addEventListener('touchstart', (e) => {
+    if (window.innerWidth > 640 || !sheetEl.classList.contains('open')) return;
+    const onHeader = e.target.closest('.drawer-header') || e.target.closest('.drawer-drag-handle');
+    const bodyEl = sheetEl.querySelector('.drawer-body');
+    const atTopOfBody = bodyEl && bodyEl.scrollTop <= 0 && !e.target.closest('input, select, textarea, button, a');
+    if (!onHeader && !atTopOfBody) return;
+
+    startY = e.touches[0].clientY;
+    currentY = startY;
+    dragging = true;
+    sheetEl.style.transition = 'none';
+  }, { passive: true });
+
+  sheetEl.addEventListener('touchmove', (e) => {
+    if (!dragging) return;
+    currentY = e.touches[0].clientY;
+    const deltaY = Math.max(0, currentY - startY);
+    if (deltaY > 4) {
+      sheetEl.style.transform = `translateY(${deltaY}px)`;
+    }
+  }, { passive: true });
+
+  const endDrag = () => {
+    if (!dragging) return;
+    dragging = false;
+    sheetEl.style.transition = '';
+    const deltaY = currentY - startY;
+    sheetEl.style.transform = '';
+    if (deltaY > 72) {
+      closeAllOverlays();
+    }
+  };
+
+  sheetEl.addEventListener('touchend', endDrag, { passive: true });
+  sheetEl.addEventListener('touchcancel', endDrag, { passive: true });
 }
 
 /* ---------- Event Wiring ---------- */
@@ -1314,20 +1383,25 @@ function initEvents() {
     const tab = e.target.closest('[data-cat-id]');
     if (!tab) return;
     state.category = tab.getAttribute('data-cat-id');
+    syncInputs();
     renderAll();
+    tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   });
 
   document.querySelectorAll('.quick-chip').forEach((chip) => {
     chip.addEventListener('click', () => {
+      const wasActive = chip.classList.contains('active');
       resetAllFilters();
-      const qCat = chip.getAttribute('data-quick-cat');
-      const qDist = chip.getAttribute('data-quick-dist');
-      const qQuery = chip.getAttribute('data-quick-query');
-      const qOrigin = chip.getAttribute('data-quick-origin');
-      if (qCat) state.category = qCat;
-      if (qDist) state.maxDistance = Number(qDist);
-      if (qQuery) state.query = qQuery;
-      if (qOrigin) state.origin = qOrigin;
+      if (!wasActive) {
+        const qCat = chip.getAttribute('data-quick-cat');
+        const qDist = chip.getAttribute('data-quick-dist');
+        const qQuery = chip.getAttribute('data-quick-query');
+        const qOrigin = chip.getAttribute('data-quick-origin');
+        if (qCat) state.category = qCat;
+        if (qDist) state.maxDistance = Number(qDist);
+        if (qQuery) state.query = qQuery;
+        if (qOrigin) state.origin = qOrigin;
+      }
       syncInputs();
       renderAll();
       document.getElementById('catalog-results-anchor')?.scrollIntoView({ behavior: 'smooth' });
@@ -1367,6 +1441,13 @@ function initEvents() {
     renderAll();
   });
 
+  // 1-tap Mobile Nearest toggle
+  document.getElementById('mobile-nearest-btn')?.addEventListener('click', () => {
+    state.sortBy = state.sortBy === 'nearest' ? 'recommended' : 'nearest';
+    syncInputs();
+    renderAll();
+  });
+
   document.querySelectorAll('[data-view]').forEach((btn) => {
     btn.addEventListener('click', () => {
       state.viewMode = btn.getAttribute('data-view');
@@ -1375,7 +1456,9 @@ function initEvents() {
     });
   });
 
+  // Whole-card tap + Bookmark & Detail trigger delegation
   document.getElementById('listings-container')?.addEventListener('click', (e) => {
+    if (e.target.closest('a')) return;
     const bmBtn = e.target.closest('[data-bookmark-id]');
     if (bmBtn) {
       e.stopPropagation();
@@ -1385,6 +1468,11 @@ function initEvents() {
     const detailTrigger = e.target.closest('[data-open-detail]');
     if (detailTrigger) {
       openDetailDrawer(detailTrigger.getAttribute('data-open-detail'));
+      return;
+    }
+    const card = e.target.closest('.place-card');
+    if (card) {
+      openDetailDrawer(card.getAttribute('data-place-id'));
     }
   });
 
@@ -1467,6 +1555,43 @@ function initEvents() {
 
   document.getElementById('drawer-close-btn')?.addEventListener('click', closeAllOverlays);
   document.getElementById('overlay-backdrop')?.addEventListener('click', closeAllOverlays);
+
+  // Floating Back-to-Top & Mobile Scroll-Aware Header Tuck
+  const backToTopBtn = document.getElementById('back-to-top-btn');
+  backToTopBtn?.addEventListener('click', () => {
+    document.body.classList.remove('mobile-scrolled-down');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  let lastScrollY = window.scrollY;
+  let scrollTicking = false;
+  window.addEventListener('scroll', () => {
+    if (scrollTicking) return;
+    scrollTicking = true;
+    window.requestAnimationFrame(() => {
+      const y = window.scrollY;
+      const delta = y - lastScrollY;
+      if (window.innerWidth <= 820) {
+        if (y > 130 && delta > 8) {
+          document.body.classList.add('mobile-scrolled-down');
+        } else if (delta < -8 || y < 70) {
+          document.body.classList.remove('mobile-scrolled-down');
+        }
+      } else {
+        document.body.classList.remove('mobile-scrolled-down');
+      }
+      if (backToTopBtn) {
+        backToTopBtn.hidden = y < 650;
+      }
+      lastScrollY = y;
+      scrollTicking = false;
+    });
+  }, { passive: true });
+
+  // Enable touch swipe-down to close on all mobile bottom sheets
+  enableBottomSheetSwipeClose(document.getElementById('detail-drawer'));
+  enableBottomSheetSwipeClose(document.getElementById('mobile-filter-sheet'));
+  enableBottomSheetSwipeClose(document.getElementById('suggest-modal'));
 
   window.addEventListener('hashchange', checkHashDeepLink);
 }

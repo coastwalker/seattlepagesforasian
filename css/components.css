@@ -14,6 +14,8 @@
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
   position: relative;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .place-card:hover {
@@ -697,8 +699,144 @@ textarea.form-control {
   transform: translateX(-50%) translateY(0);
 }
 
-/* Phone Bottom-Sheet Adaptation */
+/* Responsive Mobile Index View (Zero Horizontal Scroll on Phones) */
+@media (max-width: 720px) {
+  .index-table-wrap {
+    overflow-x: visible;
+  }
+
+  .index-table,
+  .index-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .index-table thead {
+    display: none;
+  }
+
+  .index-table tbody tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.25rem 0.65rem;
+    padding: 0.85rem 0.95rem;
+    border-bottom: 1px solid var(--border-subtle);
+    align-items: center;
+  }
+
+  .index-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .index-table td {
+    padding: 0;
+    border: none;
+  }
+
+  /* Row 1 left: Name + Address */
+  .index-table td:nth-child(1) {
+    grid-column: 1 / 2;
+  }
+
+  /* Row 1 right: Google Rating */
+  .index-table td:nth-child(4) {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+    text-align: right;
+  }
+
+  /* Row 2 left: Subcategory + City/Dist inline */
+  .index-table td:nth-child(2) {
+    grid-column: 1 / 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .index-table td:nth-child(3) {
+    grid-column: 1 / 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+  }
+
+  /* Hide full paragraph in ultra-compact index row on small phones; tapping row opens full drawer */
+  .index-table td:nth-child(5) {
+    display: none;
+  }
+
+  /* Row 2/3 right: Maps CTA */
+  .index-table td:nth-child(6) {
+    grid-column: 2 / 3;
+    grid-row: 2 / 4;
+    align-self: end;
+  }
+}
+
+/* Phone Card & Bottom-Sheet Ergonomics (80% Use Case) */
 @media (max-width: 640px) {
+  .place-card {
+    padding: 0.95rem 1rem 0.9rem;
+  }
+
+  .place-card:hover {
+    transform: none;
+  }
+
+  .place-card:active {
+    background: var(--bg-canvas);
+  }
+
+  .card-title {
+    font-size: 1.1rem;
+  }
+
+  .card-location-line {
+    margin-bottom: 0.62rem;
+    font-size: 0.8rem;
+  }
+
+  .google-review-panel {
+    padding: 0.62rem 0.72rem;
+    margin-bottom: 0.62rem;
+  }
+
+  .google-summary-snippet {
+    -webkit-line-clamp: 2;
+    font-size: 0.815rem;
+    line-height: 1.46;
+  }
+
+  .card-highlights {
+    gap: 0.3rem;
+    margin-bottom: 0.7rem;
+  }
+
+  /* Thumb-ergonomic full-width action buttons on phone */
+  .card-actions {
+    gap: 0.42rem;
+    padding-top: 0.65rem;
+  }
+
+  .card-action-links {
+    flex: 1;
+    display: flex;
+    gap: 0.42rem;
+  }
+
+  .card-action-links .card-btn {
+    flex: 1;
+  }
+
+  .card-btn {
+    min-height: 41px;
+    padding-inline: 0.68rem;
+    font-size: 0.8rem;
+    border-radius: var(--radius-sm);
+  }
+
   .detail-drawer {
     top: auto;
     left: 0;
@@ -718,14 +856,19 @@ textarea.form-control {
 
   .drawer-drag-handle {
     display: block;
+    width: 44px;
+    height: 5px;
+    margin: 0.55rem auto 0.15rem;
   }
 
   .drawer-header {
-    padding: 0.75rem 1.15rem 0.85rem;
+    padding: 0.65rem 1.1rem 0.8rem;
+    touch-action: none;
   }
 
   .drawer-body {
-    padding: 1rem 1.15rem 1.5rem;
+    padding: 0.95rem 1.1rem 1.5rem;
+    -webkit-overflow-scrolling: touch;
   }
 
   .drawer-info-row {
@@ -746,10 +889,5 @@ textarea.form-control {
 
   .modal-sheet.open {
     transform: translateY(0);
-  }
-
-  .card-btn {
-    min-height: 40px;
-    padding-inline: 0.78rem;
   }
 }
