@@ -35,7 +35,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Noto+Sans+SC:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-  <!-- Leaflet Map CSS (loaded non-blocking for interactive Map mode) -->
+  <!-- Leaflet Map CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
   <!-- Core Stylesheets -->
@@ -64,7 +64,7 @@
   </script>
 </head>
 <body>
-  <a href="#catalog-results-anchor" class="sr-only">Skip to directory listings</a>
+  <a href="#catalog-results-anchor" class="sr-only" id="ui-skip-link">Skip to directory listings</a>
 
   <!-- Sticky Global Header -->
   <header class="site-header" id="site-header">
@@ -73,7 +73,7 @@
         <span class="brand-seal" aria-hidden="true">東</span>
         <span class="brand-text">
           <span class="brand-title" id="ui-brand-title">Seattle Asian Pages</span>
-          <span class="brand-subtitle" id="ui-brand-subtitle">50-Mile East Asian Index · Anchored at 98074</span>
+          <span class="brand-subtitle" id="ui-brand-subtitle">50-Mile Asian Index · Anchored at 98074</span>
         </span>
       </a>
 
@@ -86,9 +86,9 @@
           type="search"
           id="global-search-input"
           class="header-search-input"
-          placeholder="Search restaurants, grocers, barbers, yuesao, remodelers, dishes…"
+          placeholder="Search phở, Thai, dim sum, grocers, barbers, yuesao, remodelers…"
           autocomplete="off"
-          aria-label="Search East Asian businesses, services, dishes, or cities"
+          aria-label="Search Asian businesses, services, dishes, or cities"
         />
         <span class="search-kbd" id="search-kbd-hint" aria-hidden="true">/</span>
         <button type="button" id="search-clear-btn" class="search-clear-btn" aria-label="Clear search" hidden>
@@ -105,17 +105,17 @@
           <span class="saved-count-badge tabular-nums" id="saved-count-badge" hidden>0</span>
         </button>
 
-        <button type="button" id="lang-toggle-btn" class="icon-pill-btn" aria-label="Switch language between English and Chinese" title="Switch EN / 中文">
-          <span id="lang-toggle-label">中文</span>
-        </button>
+        <!-- Explicit English | 中文 Language Option -->
+        <div class="lang-switch" role="group" aria-label="Language selection / 语言选择">
+          <button type="button" class="lang-opt-btn" id="lang-btn-en" data-lang-opt="en" aria-pressed="true">English</button>
+          <button type="button" class="lang-opt-btn" id="lang-btn-zh" data-lang-opt="zh" aria-pressed="false">中文</button>
+        </div>
 
         <button type="button" id="theme-toggle-btn" class="icon-pill-btn icon-only-btn" aria-label="Toggle light and dark theme" title="Toggle light / dark theme">
-          <!-- Sun icon (shown in dark mode) -->
           <svg id="theme-icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" hidden>
             <circle cx="12" cy="12" r="4"></circle>
             <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
           </svg>
-          <!-- Moon icon (shown in light mode) -->
           <svg id="theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
           </svg>
@@ -161,14 +161,14 @@
 
           <div class="quick-search-row" aria-label="Popular quick filters">
             <span class="quick-search-label" id="ui-popular-label">Quick jumps:</span>
-            <button type="button" class="quick-chip" data-quick-cat="all" data-quick-dist="6">Near 98074 (≤ 6 mi)</button>
-            <button type="button" class="quick-chip" data-quick-origin="Vietnamese">Vietnamese 越式</button>
-            <button type="button" class="quick-chip" data-quick-origin="Thai">Thai 泰式</button>
-            <button type="button" class="quick-chip" data-quick-query="Dim Sum">Dim Sum 點心</button>
-            <button type="button" class="quick-chip" data-quick-cat="stores">Supermarkets 超市</button>
-            <button type="button" class="quick-chip" data-quick-cat="barbers">Asian Hair &amp; Barber</button>
-            <button type="button" class="quick-chip" data-quick-cat="nanny">Yuesao 月嫂 &amp; Care</button>
-            <button type="button" class="quick-chip" data-quick-cat="remodel">Kitchen &amp; Remodel</button>
+            <button type="button" class="quick-chip" id="ui-quick-near" data-quick-cat="all" data-quick-dist="6">Near 98074 (≤ 6 mi)</button>
+            <button type="button" class="quick-chip" id="ui-quick-viet" data-quick-origin="Vietnamese">Vietnamese</button>
+            <button type="button" class="quick-chip" id="ui-quick-thai" data-quick-origin="Thai">Thai</button>
+            <button type="button" class="quick-chip" id="ui-quick-dimsum" data-quick-query="Dim Sum">Dim Sum</button>
+            <button type="button" class="quick-chip" id="ui-quick-stores" data-quick-cat="stores">Supermarkets</button>
+            <button type="button" class="quick-chip" id="ui-quick-barbers" data-quick-cat="barbers">Hair &amp; Barber</button>
+            <button type="button" class="quick-chip" id="ui-quick-nanny" data-quick-cat="nanny">Yuesao &amp; Care</button>
+            <button type="button" class="quick-chip" id="ui-quick-remodel" data-quick-cat="remodel">Kitchen &amp; Remodel</button>
           </div>
         </div>
 
@@ -177,15 +177,15 @@
             <source srcset="assets/hero-pnw-asian.webp" type="image/webp" />
             <img
               src="assets/hero-pnw-asian.jpg"
-              alt="Illustrated Pacific Northwest streetfront featuring East Asian dining, bakery, hair salon, and craftsman home overlooking Lake Washington and Mount Rainier"
+              alt="Illustrated Pacific Northwest streetfront featuring Asian dining, bakery, hair salon, and craftsman home overlooking Lake Washington and Mount Rainier"
               width="1600"
               height="900"
               fetchpriority="high"
             />
           </picture>
           <figcaption class="hero-artwork-caption">
-            <span>Anchor: Sammamish, WA · ZIP 98074</span>
-            <span class="tabular-nums">47.62° N, 122.04° W · 50 mi</span>
+            <span id="ui-art-caption-left">Anchor: Sammamish, WA · ZIP 98074</span>
+            <span class="tabular-nums" id="ui-art-caption-right">47.62° N, 122.04° W · 50 mi</span>
           </figcaption>
         </figure>
       </div>
@@ -229,7 +229,7 @@
 
             <div class="filter-field">
               <label for="select-origin" id="ui-label-origin">Origin</label>
-              <select id="select-origin" aria-label="Filter by East Asian origin"></select>
+              <select id="select-origin" aria-label="Filter by cultural origin"></select>
             </div>
 
             <div class="filter-field">
@@ -300,7 +300,7 @@
 
         <div class="catalog-workspace" id="catalog-workspace">
           <div id="listings-container">
-            <!-- Populated dynamically by app.js (Cards Grid or Index Table) -->
+            <!-- Populated dynamically by app.js -->
           </div>
 
           <aside class="map-panel" id="map-panel" aria-label="Interactive 50-mile directory map" hidden>
@@ -318,28 +318,28 @@
         <div class="brand-link" style="margin-bottom:0.55rem;">
           <span class="brand-seal" aria-hidden="true">東</span>
           <span class="brand-text">
-            <span class="brand-title">Seattle Asian Pages</span>
-            <span class="brand-subtitle">ZIP 98074 (Sammamish, WA) · 50-Mile Regional Index</span>
+            <span class="brand-title" id="ui-footer-brand-title">Seattle Asian Pages</span>
+            <span class="brand-subtitle" id="ui-footer-subtitle">ZIP 98074 (Sammamish, WA) · 50-Mile Regional Index</span>
           </span>
         </div>
-        <p style="font-size:0.86rem; color:var(--text-secondary); max-width:50ch; margin:0.4rem 0 0;">
+        <p id="ui-footer-about-desc" style="font-size:0.86rem; color:var(--text-secondary); max-width:50ch; margin:0.4rem 0 0;">
           Built as an open community catalog for Chinese, Taiwanese, Japanese, Korean, Vietnamese, and Thai dining, groceries, bakeries &amp; coffee, hair &amp; barber craft, postpartum yuesao &amp; family care, remodeling contractors, and wellness across Puget Sound.
         </p>
       </div>
 
       <div>
-        <h2 style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin:0 0 0.65rem;">Coverage Hubs (≤ 50 mi of 98074)</h2>
-        <p style="font-size:0.84rem; color:var(--text-secondary); margin:0; line-height:1.65;">
+        <h2 id="ui-footer-hubs-heading" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin:0 0 0.65rem;">Coverage Hubs (≤ 50 mi of 98074)</h2>
+        <p id="ui-footer-hubs-list" style="font-size:0.84rem; color:var(--text-secondary); margin:0; line-height:1.65;">
           Sammamish · Issaquah · Redmond · Bellevue · Kirkland · Seattle (Chinatown-ID, Little Saigon, U-District, Capitol Hill, Ballard, Fremont, Rainier Valley) · Renton · Kent · Tukwila · Lynnwood · Edmonds · Federal Way · Lakewood · Tacoma (Lincoln District)
         </p>
       </div>
 
       <div>
-        <h2 style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin:0 0 0.65rem;">About Google Review Data</h2>
-        <p style="font-size:0.84rem; color:var(--text-secondary); margin:0 0 0.75rem; line-height:1.6;">
-          Average ratings, review counts, and review summaries reflect publicly indexed Google Maps snapshots and community feedback. Tap <strong>Google Maps</strong> on any listing for live hours and reviews.
+        <h2 id="ui-footer-reviews-heading" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin:0 0 0.65rem;">About Google Review Data</h2>
+        <p id="ui-footer-reviews-desc" style="font-size:0.84rem; color:var(--text-secondary); margin:0 0 0.75rem; line-height:1.6;">
+          Average ratings, review counts, and review summaries reflect publicly indexed Google Maps snapshots and community feedback. Tap Google Maps on any listing for live hours and reviews.
         </p>
-        <a href="https://github.com/coastwalker/seattlepagesforasian" target="_blank" rel="noopener noreferrer" class="card-btn" style="display:inline-flex;">
+        <a href="https://github.com/coastwalker/seattlepagesforasian" target="_blank" rel="noopener noreferrer" class="card-btn" id="ui-footer-github-btn" style="display:inline-flex;">
           View Source &amp; Contribute on GitHub ↗
         </a>
       </div>
@@ -373,35 +373,35 @@
     </div>
     <div class="drawer-body" id="mobile-filter-body">
       <div class="form-group">
-        <label for="mobile-select-anchor">Distance Reference Anchor</label>
+        <label for="mobile-select-anchor" id="ui-m-anchor-label">Distance Reference Anchor</label>
         <select id="mobile-select-anchor" class="form-control"></select>
       </div>
 
       <div class="form-group">
-        <label>Max Distance Radius</label>
+        <label id="ui-m-radius-label">Max Distance Radius</label>
         <div class="chip-grid" id="mobile-dist-chips">
-          <button type="button" class="filter-chip-btn" data-m-dist="50" aria-pressed="true">≤ 50 mi (All)</button>
-          <button type="button" class="filter-chip-btn" data-m-dist="6" aria-pressed="false">≤ 6 mi (98074)</button>
-          <button type="button" class="filter-chip-btn" data-m-dist="12" aria-pressed="false">≤ 12 mi (Eastside)</button>
-          <button type="button" class="filter-chip-btn" data-m-dist="20" aria-pressed="false">≤ 20 mi</button>
-          <button type="button" class="filter-chip-btn" data-m-dist="35" aria-pressed="false">≤ 35 mi</button>
+          <button type="button" class="filter-chip-btn" id="m-dist-50" data-m-dist="50" aria-pressed="true">≤ 50 mi (All)</button>
+          <button type="button" class="filter-chip-btn" id="m-dist-6" data-m-dist="6" aria-pressed="false">≤ 6 mi (Near 98074)</button>
+          <button type="button" class="filter-chip-btn" id="m-dist-12" data-m-dist="12" aria-pressed="false">≤ 12 mi (Eastside)</button>
+          <button type="button" class="filter-chip-btn" id="m-dist-20" data-m-dist="20" aria-pressed="false">≤ 20 mi (Metro Core)</button>
+          <button type="button" class="filter-chip-btn" id="m-dist-35" data-m-dist="35" aria-pressed="false">≤ 35 mi</button>
         </div>
       </div>
 
       <div class="form-group">
-        <label for="mobile-select-area">City / Area Hub</label>
+        <label for="mobile-select-area" id="ui-m-area-label">City / Area Hub</label>
         <select id="mobile-select-area" class="form-control"></select>
       </div>
 
       <div class="form-group">
-        <label for="mobile-select-origin">Cultural Focus / Origin</label>
+        <label for="mobile-select-origin" id="ui-m-origin-label">Cultural Focus / Origin</label>
         <select id="mobile-select-origin" class="form-control"></select>
       </div>
 
       <div class="form-group">
-        <label>Minimum Google Maps Rating</label>
+        <label id="ui-m-rating-label">Minimum Google Maps Rating</label>
         <div class="chip-grid" id="mobile-rating-chips">
-          <button type="button" class="filter-chip-btn" data-m-rating="0" aria-pressed="true">Any</button>
+          <button type="button" class="filter-chip-btn" id="m-rating-0" data-m-rating="0" aria-pressed="true">Any</button>
           <button type="button" class="filter-chip-btn" data-m-rating="4.0" aria-pressed="false">4.0+ ★</button>
           <button type="button" class="filter-chip-btn" data-m-rating="4.5" aria-pressed="false">4.5+ ★</button>
           <button type="button" class="filter-chip-btn" data-m-rating="4.7" aria-pressed="false">4.7+ ★</button>
@@ -409,12 +409,12 @@
       </div>
 
       <div class="form-group">
-        <label for="mobile-select-sort">Sort Order</label>
+        <label for="mobile-select-sort" id="ui-m-sort-label">Sort Order</label>
         <select id="mobile-select-sort" class="form-control">
-          <option value="recommended">Featured &amp; Popular</option>
-          <option value="rating">Highest Google Rating</option>
-          <option value="reviews">Most Google Reviews</option>
-          <option value="nearest">Nearest to Anchor</option>
+          <option value="recommended" id="m-opt-sort-rec">Featured &amp; Popular</option>
+          <option value="rating" id="m-opt-sort-rating">Highest Google Rating</option>
+          <option value="reviews" id="m-opt-sort-reviews">Most Google Reviews</option>
+          <option value="nearest" id="m-opt-sort-nearest">Nearest to Anchor</option>
         </select>
       </div>
     </div>
@@ -430,7 +430,7 @@
     <div class="drawer-header">
       <div>
         <h2 id="suggest-modal-title" style="margin:0; font-family:var(--font-serif); font-size:1.25rem;">Suggest an Asian Business or Service</h2>
-        <p style="margin:0.2rem 0 0; font-size:0.82rem; color:var(--text-secondary);">Know a great phở spot, Thai kitchen, grocer, yuesao, barber, or contractor within 50 miles of 98074? Submit via GitHub Issue.</p>
+        <p id="suggest-modal-subtitle" style="margin:0.2rem 0 0; font-size:0.82rem; color:var(--text-secondary);">Know a great phở spot, Thai kitchen, grocer, yuesao, barber, or contractor within 50 miles of 98074? Submit via GitHub Issue.</p>
       </div>
       <button type="button" class="drawer-close-btn" id="suggest-close-btn" aria-label="Close modal">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -438,30 +438,22 @@
     </div>
     <form class="drawer-body" id="suggest-form">
       <div class="form-group">
-        <label for="sug-name">Business / Provider Name *</label>
+        <label for="sug-name" id="ui-sug-name-label">Business / Provider Name *</label>
         <input type="text" id="sug-name" class="form-control" required placeholder="e.g., Macky's Dim Sum / Auntie Chen Postpartum Care" />
       </div>
       <div class="form-group">
-        <label for="sug-category">Category *</label>
-        <select id="sug-category" class="form-control" required>
-          <option value="Restaurants">Restaurants &amp; Dining</option>
-          <option value="Stores & Markets">Stores &amp; Markets</option>
-          <option value="Bakeries & Tea">Bakeries, Desserts &amp; Tea</option>
-          <option value="Barbers & Salons">Barbers &amp; Hair Salons</option>
-          <option value="Nanny & Home Care">House Nanny, Yuesao &amp; Family Care</option>
-          <option value="Remodel & Home">House Remodel, Cabinets &amp; Contractors</option>
-          <option value="Wellness & Spas">Wellness, TCM &amp; Spas</option>
-        </select>
+        <label for="sug-category" id="ui-sug-cat-label">Category *</label>
+        <select id="sug-category" class="form-control" required></select>
       </div>
       <div class="form-group">
-        <label for="sug-city">City &amp; Address (within 50 mi of 98074) *</label>
+        <label for="sug-city" id="ui-sug-city-label">City &amp; Address (within 50 mi of 98074) *</label>
         <input type="text" id="sug-city" class="form-control" required placeholder="e.g., Issaquah, WA / 123 Main St, Bellevue, WA" />
       </div>
       <div class="form-group">
-        <label for="sug-maps">Google Maps Link or Notes</label>
+        <label for="sug-maps" id="ui-sug-notes-label">Google Maps Link or Notes</label>
         <textarea id="sug-maps" class="form-control" placeholder="Share Google Maps URL, specialties, languages spoken, or why you recommend them…"></textarea>
       </div>
-      <button type="submit" class="drawer-cta drawer-cta-primary" style="width:100%;">Open Pre-filled GitHub Submission ↗</button>
+      <button type="submit" class="drawer-cta drawer-cta-primary" id="ui-sug-submit-btn" style="width:100%;">Open Pre-filled GitHub Submission ↗</button>
     </form>
   </aside>
 

@@ -199,6 +199,41 @@
   width: 40px;
 }
 
+/* Segmented Language Switcher (English | 中文) */
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-default);
+  background: var(--bg-muted);
+  height: 40px;
+}
+
+.lang-opt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding-inline: 0.68rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: background-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.lang-opt-btn:hover {
+  color: var(--text-primary);
+}
+
+.lang-opt-btn[aria-pressed="true"] {
+  background: var(--bg-elevated);
+  color: var(--accent-primary);
+  box-shadow: var(--shadow-xs);
+}
+
 .saved-count-badge {
   display: inline-flex;
   align-items: center;
@@ -723,6 +758,17 @@
   .header-actions .icon-only-btn {
     width: 36px;
     padding-inline: 0;
+  }
+
+  .lang-switch {
+    height: 36px;
+    padding: 2px;
+  }
+
+  .lang-opt-btn {
+    height: 30px;
+    padding-inline: 0.5rem;
+    font-size: 0.75rem;
   }
 
   .btn-label-desktop {

@@ -1,8 +1,17 @@
 /* ==========================================================================
-   Seattle Asian Pages — Interactive Catalog Engine
+   Seattle Asian Pages — Interactive Bilingual Catalog Engine (English | 中文)
    ========================================================================== */
 
-import { ANCHOR_98074, ANCHOR_PRESETS, CATEGORIES, AREA_GROUPS, ORIGINS, COPY } from './i18n.js';
+import {
+  ANCHOR_98074,
+  ANCHOR_PRESETS,
+  CATEGORIES,
+  AREA_GROUPS,
+  ORIGINS,
+  ORIGIN_BADGE_ZH,
+  CITY_ZH,
+  COPY
+} from './i18n.js';
 import { PLACES } from './data/catalog.js';
 
 /* ---------- Utility Helpers ---------- */
@@ -18,7 +27,7 @@ function escapeHtml(str) {
 
 function haversineMiles(lat1, lon1, lat2, lon2) {
   const toRad = (deg) => (deg * Math.PI) / 180;
-  const R = 3958.8; // Earth radius in miles
+  const R = 3958.8;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
   const a =
@@ -54,18 +63,17 @@ const CAT_COLORS = {
 };
 
 const CAT_ICONS_TEXT = {
-  restaurants: '食',
-  stores: '市',
-  bakeries: '茶',
-  barbers: '髮',
-  nanny: '家',
-  remodel: '築',
-  wellness: '養'
+  en: { restaurants: '食', stores: '市', bakeries: '茶', barbers: '髮', nanny: '家', remodel: '築', wellness: '養' },
+  zh: { restaurants: '食', stores: '市', bakeries: '茶', barbers: '发', nanny: '家', remodel: '筑', wellness: '养' }
 };
 
 /* ---------- Application State ---------- */
+const urlParams = new URLSearchParams(window.location.search);
+const initialLangParam = urlParams.get('lang');
+const savedLang = localStorage.getItem('sap-lang');
+
 const state = {
-  lang: localStorage.getItem('sap-lang') === 'zh' ? 'zh' : 'en',
+  lang: initialLangParam === 'zh' || initialLangParam === 'en' ? initialLangParam : (savedLang === 'zh' ? 'zh' : 'en'),
   theme: document.documentElement.getAttribute('data-theme') || 'light',
   query: '',
   category: 'all',
@@ -82,12 +90,81 @@ const state = {
   activePlaceId: null
 };
 
-/* ---------- Enrich Dataset with 98074 Distances ---------- */
+/* ---------- Bilingual Entity Field Getters ---------- */
+function getPlaceTitleParts(place) {
+  if (state.lang === 'zh') {
+    const primary = place.nameZh || place.nativeName || place.name;
+    const normPrimary = primary.toLowerCase();
+    const normEn = (place.name || '').toLowerCase();
+    // Show English storefront name alongside if not already embedded in nameZh
+    const baseEnBrand = normEn.split(/[\s(–-]/)[0];
+    const alreadyHasEn = baseEnBrand.length >= 3 && normPrimary.includes(baseEnBrand);
+    const secondary = !alreadyHasEn && primary !== place.name ? place.name : '';
+    return { primary, secondary };
+  }
+  return {
+    primary: place.name,
+    secondary: place.nativeName || ''
+  };
+}
+
+function getPlaceSubcategory(place) {
+  return state.lang === 'zh' ? (place.subcategoryZh || place.subcategory) : place.subcategory;
+}
+
+function getPlaceOriginBadge(place) {
+  if (state.lang === 'zh') {
+    return ORIGIN_BADGE_ZH[place.origin] || place.origin;
+  }
+  return place.origin;
+}
+
+function getPlaceCityDisplay(place) {
+  if (state.lang === 'zh') {
+    const zhCity = CITY_ZH[place.city] || place.city;
+    return `${zhCity} (${place.city})`;
+  }
+  return `${place.city}, WA`;
+}
+
+function getPlaceSummary(place) {
+  return state.lang === 'zh' ? (place.reviewSummaryZh || place.reviewSummary) : place.reviewSummary;
+}
+
+function getPlaceHighlights(place) {
+  if (state.lang === 'zh' && Array.isArray(place.highlightsZh) && place.highlightsZh.length > 0) {
+    return place.highlightsZh;
+  }
+  return place.highlights || [];
+}
+
+function getPlaceAddress(place) {
+  if (state.lang === 'zh') {
+    return place.addressZh || place.address || `${CITY_ZH[place.city] || place.city}, WA ${place.zip || ''}`;
+  }
+  return place.address || `${place.city}, WA ${place.zip || ''}`;
+}
+
+function getPlaceHours(place) {
+  if (!place.hours && !place.hoursZh) return '';
+  return state.lang === 'zh' ? (place.hoursZh || place.hours) : place.hours;
+}
+
+function formatDistanceBadgeText(distMiles) {
+  if (state.lang === 'zh') {
+    if (state.anchorKey === '98074') return `距 98074 约 ${distMiles} 英里`;
+    if (state.anchorKey === 'gps') return `距您约 ${distMiles} 英里`;
+    return `距 ${state.anchorKey} 约 ${distMiles} 英里`;
+  }
+  const ref = state.anchorKey === '98074' ? 'from 98074' : (state.anchorKey === 'gps' ? 'from you' : `from ${state.anchorKey}`);
+  return `${distMiles} mi ${ref}`;
+}
+
+/* ---------- Enrich Dataset with 98074 Distances & Bilingual Search Index ---------- */
 const enrichedPlaces = PLACES.map((p) => {
   const d98074 = haversineMiles(ANCHOR_98074.lat, ANCHOR_98074.lng, p.lat, p.lng);
   const ratingVal = typeof p.googleRating === 'number' ? p.googleRating : 0;
   const reviewsVal = typeof p.googleReviewCount === 'number' ? p.googleReviewCount : 0;
-  // Balanced quality + popularity + 98074 proximity score
   const recScore =
     (ratingVal > 0 ? ratingVal * 18 : 72) +
     Math.log10(reviewsVal + 12) * 11 -
@@ -97,14 +174,21 @@ const enrichedPlaces = PLACES.map((p) => {
   const searchHaystack = [
     p.name,
     p.nativeName,
+    p.nameZh,
     p.category,
     p.subcategory,
+    p.subcategoryZh,
     p.origin,
+    ORIGIN_BADGE_ZH[p.origin],
     p.city,
+    CITY_ZH[p.city],
     p.zip,
     p.address,
+    p.addressZh,
     p.reviewSummary,
+    p.reviewSummaryZh,
     ...(p.highlights || []),
+    ...(p.highlightsZh || []),
     ...(p.keywords || [])
   ]
     .filter(Boolean)
@@ -127,6 +211,24 @@ let markersLayer = null;
 let radiusCircle = null;
 let anchorMarker = null;
 
+function refreshAnchorMarkerLanguage() {
+  if (!mapInstance || typeof window.L === 'undefined') return;
+  const L = window.L;
+  const copy = COPY[state.lang];
+  if (anchorMarker) {
+    mapInstance.removeLayer(anchorMarker);
+  }
+  const homeIcon = L.divIcon({
+    className: '',
+    html: `<div style="background:#1c2530;color:#fff;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:800;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.35);white-space:nowrap;">${escapeHtml(copy.mapAnchorPin)}</div>`,
+    iconSize: [96, 24],
+    iconAnchor: [48, 12]
+  });
+  anchorMarker = L.marker([ANCHOR_98074.lat, ANCHOR_98074.lng], { icon: homeIcon })
+    .bindPopup(copy.mapAnchorPopup)
+    .addTo(mapInstance);
+}
+
 function ensureMapInitialized() {
   if (mapInstance || typeof window.L === 'undefined') return;
   const L = window.L;
@@ -139,7 +241,6 @@ function ensureMapInitialized() {
   updateMapTileTheme();
   markersLayer = L.layerGroup().addTo(mapInstance);
 
-  // 50-mile coverage boundary around 98074 (80,467 meters)
   radiusCircle = L.circle([ANCHOR_98074.lat, ANCHOR_98074.lng], {
     radius: 80467.2,
     color: '#266853',
@@ -149,21 +250,12 @@ function ensureMapInitialized() {
     fillOpacity: 0.03
   }).addTo(mapInstance);
 
-  // 98074 Center Anchor Pin
-  const homeIcon = L.divIcon({
-    className: '',
-    html: `<div style="background:#1c2530;color:#fff;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:800;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.35);white-space:nowrap;">98074 Anchor</div>`,
-    iconSize: [92, 24],
-    iconAnchor: [46, 12]
-  });
-  anchorMarker = L.marker([ANCHOR_98074.lat, ANCHOR_98074.lng], { icon: homeIcon })
-    .bindPopup('<strong>ZIP 98074 · Sammamish, WA</strong><br/>Center of 50-mile East Asian Directory')
-    .addTo(mapInstance);
+  refreshAnchorMarkerLanguage();
 }
 
 function updateMapTileTheme() {
   if (!mapInstance || typeof window.L === 'undefined') return;
-  if (tileLayer) return; // Dark mode is handled smoothly via CSS filter on .leaflet-tile-pane
+  if (tileLayer) return;
   const L = window.L;
   tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -176,14 +268,17 @@ function renderMapMarkers(filtered) {
   ensureMapInitialized();
   if (!mapInstance || !markersLayer) return;
 
+  refreshAnchorMarkerLanguage();
+
   const L = window.L;
+  const copy = COPY[state.lang];
   markersLayer.clearLayers();
 
   const bounds = [];
   filtered.forEach((place) => {
     if (typeof place.lat !== 'number' || typeof place.lng !== 'number') return;
     const color = CAT_COLORS[place.category] || '#c13f20';
-    const glyph = CAT_ICONS_TEXT[place.category] || '東';
+    const glyph = (CAT_ICONS_TEXT[state.lang] || CAT_ICONS_TEXT.en)[place.category] || '東';
     const icon = L.divIcon({
       className: '',
       html: `<div class="sap-map-pin" style="background:${color};"><span>${glyph}</span></div>`,
@@ -192,19 +287,24 @@ function renderMapMarkers(filtered) {
       popupAnchor: [0, -28]
     });
 
+    const { primary, secondary } = getPlaceTitleParts(place);
+    const subcat = getPlaceSubcategory(place);
+    const cityDisp = state.lang === 'zh' ? (CITY_ZH[place.city] || place.city) : place.city;
+    const distLine = state.lang === 'zh' ? `距 98074 约 ${place.dist98074} 英里` : `${place.dist98074} mi from 98074`;
+
     const ratingLine = place.googleRating
-      ? `<div style="font-size:12.5px;font-weight:700;margin:3px 0;">★ ${place.googleRating.toFixed(1)} <span style="font-weight:500;opacity:0.78;">(${formatNumber(place.googleReviewCount)} Google reviews)</span></div>`
+      ? `<div style="font-size:12.5px;font-weight:700;margin:3px 0;">★ ${place.googleRating.toFixed(1)} <span style="font-weight:500;opacity:0.78;">(${formatNumber(place.googleReviewCount)} ${escapeHtml(copy.googleReviewsLabel)})</span></div>`
       : '';
 
     const popupHtml = `
-      <div style="min-width:205px;font-family:var(--font-sans);">
-        <div style="font-size:11px;font-weight:700;opacity:0.7;text-transform:uppercase;">${escapeHtml(place.subcategory)} · ${escapeHtml(place.city)}</div>
-        <div style="font-size:14.5px;font-weight:750;margin-top:2px;">${escapeHtml(place.name)} ${place.nativeName ? `<span style="opacity:0.7;font-weight:500;">${escapeHtml(place.nativeName)}</span>` : ''}</div>
+      <div style="min-width:210px;font-family:var(--font-sans);">
+        <div style="font-size:11px;font-weight:700;opacity:0.7;text-transform:uppercase;">${escapeHtml(subcat)} · ${escapeHtml(cityDisp)}</div>
+        <div style="font-size:14.5px;font-weight:750;margin-top:2px;">${escapeHtml(primary)} ${secondary ? `<span style="opacity:0.7;font-weight:500;">${escapeHtml(secondary)}</span>` : ''}</div>
         ${ratingLine}
-        <div style="font-size:12px;opacity:0.82;margin-bottom:7px;">${place.dist98074} mi from 98074</div>
+        <div style="font-size:12px;opacity:0.82;margin-bottom:7px;">${escapeHtml(distLine)}</div>
         <div style="display:flex;gap:6px;">
-          <button type="button" data-popup-detail="${escapeHtml(place.id)}" style="padding:4px 9px;border-radius:6px;background:var(--accent-primary);color:#fff;font-size:12px;font-weight:700;border:none;cursor:pointer;">Details</button>
-          <a href="${escapeHtml(buildGoogleMapsSearchUrl(place))}" target="_blank" rel="noopener noreferrer" style="padding:4px 9px;border-radius:6px;border:1px solid var(--border-default);font-size:12px;font-weight:600;text-decoration:none;color:inherit;">Google Maps ↗</a>
+          <button type="button" data-popup-detail="${escapeHtml(place.id)}" style="padding:4px 9px;border-radius:6px;background:var(--accent-primary);color:#fff;font-size:12px;font-weight:700;border:none;cursor:pointer;">${escapeHtml(copy.detailsBtn)}</button>
+          <a href="${escapeHtml(buildGoogleMapsSearchUrl(place))}" target="_blank" rel="noopener noreferrer" style="padding:4px 9px;border-radius:6px;border:1px solid var(--border-default);font-size:12px;font-weight:600;text-decoration:none;color:inherit;">${escapeHtml(copy.openGoogleMaps)} ↗</a>
         </div>
       </div>
     `;
@@ -359,6 +459,14 @@ function renderSelectOptions() {
       (o) => `<option value="${o.id}" ${state.origin === o.id ? 'selected' : ''}>${escapeHtml(state.lang === 'zh' ? o.zh : o.en)}</option>`
     ).join('');
   });
+
+  // Suggest Modal category options
+  const sugCat = document.getElementById('sug-category');
+  if (sugCat) {
+    sugCat.innerHTML = CATEGORIES.filter((c) => c.id !== 'all')
+      .map((c) => `<option value="${escapeHtml(c.en)}">${escapeHtml(state.lang === 'zh' ? c.zh : c.en)}</option>`)
+      .join('');
+  }
 }
 
 function renderCategoryRail() {
@@ -393,8 +501,13 @@ function renderCategoryRail() {
 
 function renderCardHtml(place, copy) {
   const isSaved = state.savedIds.has(place.id);
-  const distRefLabel = state.anchorKey === '98074' ? 'from 98074' : (state.anchorKey === 'gps' ? 'from you' : `from ${state.anchorKey}`);
-  const distText = `${place.distAnchor} mi ${distRefLabel}`;
+  const { primary, secondary } = getPlaceTitleParts(place);
+  const subcat = getPlaceSubcategory(place);
+  const originBadge = getPlaceOriginBadge(place);
+  const cityDisp = getPlaceCityDisplay(place);
+  const distText = formatDistanceBadgeText(place.distAnchor);
+  const summaryText = getPlaceSummary(place);
+  const highlightsList = getPlaceHighlights(place);
 
   const hasRating = typeof place.googleRating === 'number' && place.googleRating > 0;
   const starPct = hasRating ? Math.min(100, Math.max(0, (place.googleRating / 5) * 100)).toFixed(1) : 0;
@@ -404,12 +517,12 @@ function renderCardHtml(place, copy) {
       <div class="google-rating-header">
         <div class="google-score-group">
           <span class="google-score-num">${place.googleRating.toFixed(1)}</span>
-          <span class="stars-meter" style="--star-pct:${starPct}%" aria-label="Rated ${place.googleRating} out of 5 stars on Google Maps">
+          <span class="stars-meter" style="--star-pct:${starPct}%" aria-label="${place.googleRating} / 5">
             <span class="stars-meter-fill"></span>
           </span>
           <span class="google-review-count">(${formatNumber(place.googleReviewCount)} ${escapeHtml(copy.googleReviewsLabel)})</span>
         </div>
-        <span class="google-maps-source-tag">Google Maps</span>
+        <span class="google-maps-source-tag">${escapeHtml(copy.googleMapsSource)}</span>
       </div>
     `
     : `
@@ -418,12 +531,19 @@ function renderCardHtml(place, copy) {
       </div>
     `;
 
-  const highlightsHtml = (place.highlights || [])
+  const highlightsHtml = highlightsList
     .slice(0, 3)
     .map((h) => `<span class="highlight-chip">${escapeHtml(h)}</span>`)
     .join('');
 
   const mapsUrl = buildGoogleMapsSearchUrl(place);
+  const distTitle = state.lang === 'zh'
+    ? `距萨马米什 98074 约 ${place.dist98074} 英里`
+    : `${place.dist98074} miles from Sammamish 98074`;
+
+  const saveLabel = state.lang === 'zh'
+    ? (isSaved ? '取消收藏' : '加入收藏')
+    : (isSaved ? 'Remove from saved' : 'Save to shortlist');
 
   return `
     <article class="place-card" data-place-id="${escapeHtml(place.id)}">
@@ -431,17 +551,17 @@ function renderCardHtml(place, copy) {
         <div class="card-top-meta">
           <span class="card-cat-pill">
             <span class="cat-dot" data-cat="${escapeHtml(place.category)}"></span>
-            <span>${escapeHtml(getCategoryLabel(place.category))} · ${escapeHtml(place.subcategory)}</span>
+            <span>${escapeHtml(getCategoryLabel(place.category))} · ${escapeHtml(subcat)}</span>
           </span>
           <div class="card-top-right">
-            <span class="origin-tag">${escapeHtml(place.origin)}</span>
+            <span class="origin-tag">${escapeHtml(originBadge)}</span>
             <button
               type="button"
               class="bookmark-btn"
               data-bookmark-id="${escapeHtml(place.id)}"
               aria-pressed="${isSaved}"
-              aria-label="${isSaved ? 'Remove from saved' : 'Save place'}"
-              title="${isSaved ? 'Saved' : 'Save to shortlist'}"
+              aria-label="${escapeHtml(saveLabel)}"
+              title="${escapeHtml(saveLabel)}"
             >
               <svg width="17" height="17" viewBox="0 0 24 24" fill="${isSaved ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
@@ -452,20 +572,20 @@ function renderCardHtml(place, copy) {
 
         <button type="button" class="card-title-btn" data-open-detail="${escapeHtml(place.id)}">
           <h3 class="card-title">
-            ${escapeHtml(place.name)}
-            ${place.nativeName ? `<span class="card-native-name">${escapeHtml(place.nativeName)}</span>` : ''}
+            ${escapeHtml(primary)}
+            ${secondary ? `<span class="card-native-name">${escapeHtml(secondary)}</span>` : ''}
           </h3>
         </button>
 
         <div class="card-location-line">
-          <span>${escapeHtml(place.city)}, WA</span>
-          <span class="distance-badge" title="${place.dist98074} miles from Sammamish 98074">${escapeHtml(distText)}</span>
+          <span>${escapeHtml(cityDisp)}</span>
+          <span class="distance-badge" title="${escapeHtml(distTitle)}">${escapeHtml(distText)}</span>
           ${place.priceLevel ? `<span class="price-tier">${escapeHtml(place.priceLevel)}</span>` : ''}
         </div>
 
         <div class="google-review-panel">
           ${ratingHeaderHtml}
-          <p class="google-summary-snippet">${escapeHtml(place.reviewSummary)}</p>
+          <p class="google-summary-snippet">${escapeHtml(summaryText)}</p>
         </div>
 
         ${highlightsHtml ? `<div class="card-highlights">${highlightsHtml}</div>` : ''}
@@ -490,29 +610,37 @@ function renderCardHtml(place, copy) {
 function renderTableViewHtml(filtered, copy) {
   const rows = filtered
     .map((p) => {
+      const { primary, secondary } = getPlaceTitleParts(p);
+      const subcat = getPlaceSubcategory(p);
+      const originBadge = getPlaceOriginBadge(p);
+      const cityShort = state.lang === 'zh' ? (CITY_ZH[p.city] || p.city) : p.city;
+      const distShort = state.lang === 'zh' ? `${p.distAnchor} 英里` : `${p.distAnchor} mi`;
+      const addrText = getPlaceAddress(p);
+      const summaryText = getPlaceSummary(p);
+
       const hasRating = typeof p.googleRating === 'number' && p.googleRating > 0;
       const ratingCell = hasRating
         ? `<strong class="tabular-nums" style="color:var(--star-gold);">★ ${p.googleRating.toFixed(1)}</strong> <span class="tabular-nums" style="font-size:0.78rem;color:var(--text-tertiary);">(${formatNumber(p.googleReviewCount)})</span>`
-        : `<span style="font-size:0.78rem;color:var(--text-tertiary);">Verified Service</span>`;
+        : `<span style="font-size:0.78rem;color:var(--text-tertiary);">${escapeHtml(copy.verifiedServiceShort)}</span>`;
 
       return `
-        <tr data-open-detail="${escapeHtml(p.id)}" tabindex="0" role="button" aria-label="View details for ${escapeHtml(p.name)}">
+        <tr data-open-detail="${escapeHtml(p.id)}" tabindex="0" role="button" aria-label="${escapeHtml(primary)}">
           <td>
-            <div style="font-weight:700;color:var(--text-primary);">${escapeHtml(p.name)} ${p.nativeName ? `<span style="font-weight:500;color:var(--text-tertiary);margin-left:4px;">${escapeHtml(p.nativeName)}</span>` : ''}</div>
-            <div style="font-size:0.78rem;color:var(--text-tertiary);">${escapeHtml(p.address || p.city + ', WA')}</div>
+            <div style="font-weight:700;color:var(--text-primary);">${escapeHtml(primary)} ${secondary ? `<span style="font-weight:500;color:var(--text-tertiary);margin-left:4px;">${escapeHtml(secondary)}</span>` : ''}</div>
+            <div style="font-size:0.78rem;color:var(--text-tertiary);">${escapeHtml(addrText)}</div>
           </td>
           <td>
-            <span class="card-cat-pill"><span class="cat-dot" data-cat="${escapeHtml(p.category)}"></span>${escapeHtml(p.subcategory)}</span>
-            <div style="font-size:0.75rem;color:var(--text-tertiary);margin-top:2px;">${escapeHtml(p.origin)} ${p.priceLevel ? `· ${escapeHtml(p.priceLevel)}` : ''}</div>
+            <span class="card-cat-pill"><span class="cat-dot" data-cat="${escapeHtml(p.category)}"></span>${escapeHtml(subcat)}</span>
+            <div style="font-size:0.75rem;color:var(--text-tertiary);margin-top:2px;">${escapeHtml(originBadge)} ${p.priceLevel ? `· ${escapeHtml(p.priceLevel)}` : ''}</div>
           </td>
           <td style="white-space:nowrap;">
-            <div style="font-weight:600;">${escapeHtml(p.city)}</div>
-            <span class="distance-badge">${p.distAnchor} mi</span>
+            <div style="font-weight:600;">${escapeHtml(cityShort)}</div>
+            <span class="distance-badge">${escapeHtml(distShort)}</span>
           </td>
           <td style="white-space:nowrap;">${ratingCell}</td>
-          <td style="max-width:360px;font-size:0.82rem;color:var(--text-secondary);">${escapeHtml(p.reviewSummary)}</td>
+          <td style="max-width:360px;font-size:0.82rem;color:var(--text-secondary);">${escapeHtml(summaryText)}</td>
           <td style="white-space:nowrap;" onclick="event.stopPropagation();">
-            <a href="${escapeHtml(buildGoogleMapsSearchUrl(p))}" target="_blank" rel="noopener noreferrer" class="card-btn card-btn-primary">Maps ↗</a>
+            <a href="${escapeHtml(buildGoogleMapsSearchUrl(p))}" target="_blank" rel="noopener noreferrer" class="card-btn card-btn-primary">${escapeHtml(copy.mapsShort)}</a>
           </td>
         </tr>
       `;
@@ -524,12 +652,12 @@ function renderTableViewHtml(filtered, copy) {
       <table class="index-table">
         <thead>
           <tr>
-            <th>Business / Entity</th>
-            <th>Category &amp; Origin</th>
-            <th>City &amp; Distance</th>
-            <th>Google Rating</th>
-            <th>Google Review Summary</th>
-            <th>Map</th>
+            <th>${escapeHtml(copy.thEntity)}</th>
+            <th>${escapeHtml(copy.thCategory)}</th>
+            <th>${escapeHtml(copy.thCityDist)}</th>
+            <th>${escapeHtml(copy.thRating)}</th>
+            <th>${escapeHtml(copy.thSummary)}</th>
+            <th>${escapeHtml(copy.thMap)}</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -549,15 +677,27 @@ function renderStatusAndActivePills(filtered, copy) {
   }
 
   const activePills = [];
-  if (state.query.trim()) activePills.push({ label: `"${state.query.trim()}"`, clear: () => { state.query = ''; syncInputs(); renderAll(); } });
-  if (state.maxDistance < 50) activePills.push({ label: `≤ ${state.maxDistance} mi`, clear: () => { state.maxDistance = 50; syncInputs(); renderAll(); } });
+  if (state.query.trim()) {
+    activePills.push({ label: `“${state.query.trim()}”`, clear: () => { state.query = ''; syncInputs(); renderAll(); } });
+  }
+  if (state.maxDistance < 50) {
+    const dLabel = state.lang === 'zh' ? `≤ ${state.maxDistance} 英里` : `≤ ${state.maxDistance} mi`;
+    activePills.push({ label: dLabel, clear: () => { state.maxDistance = 50; syncInputs(); renderAll(); } });
+  }
   if (state.area !== 'all') {
     const a = AREA_GROUPS.find((x) => x.id === state.area);
     activePills.push({ label: a ? (state.lang === 'zh' ? a.zh : a.en) : state.area, clear: () => { state.area = 'all'; syncInputs(); renderAll(); } });
   }
-  if (state.origin !== 'all') activePills.push({ label: state.origin, clear: () => { state.origin = 'all'; syncInputs(); renderAll(); } });
-  if (state.minRating > 0) activePills.push({ label: `${state.minRating}+ ★`, clear: () => { state.minRating = 0; syncInputs(); renderAll(); } });
-  if (state.savedOnly) activePills.push({ label: copy.savedBtn, clear: () => { state.savedOnly = false; syncInputs(); renderAll(); } });
+  if (state.origin !== 'all') {
+    const o = ORIGINS.find((x) => x.id === state.origin);
+    activePills.push({ label: o ? (state.lang === 'zh' ? o.zh : o.en) : state.origin, clear: () => { state.origin = 'all'; syncInputs(); renderAll(); } });
+  }
+  if (state.minRating > 0) {
+    activePills.push({ label: `${state.minRating}+ ★`, clear: () => { state.minRating = 0; syncInputs(); renderAll(); } });
+  }
+  if (state.savedOnly) {
+    activePills.push({ label: copy.savedBtn, clear: () => { state.savedOnly = false; syncInputs(); renderAll(); } });
+  }
 
   if (mobileBadge) {
     mobileBadge.hidden = activePills.length === 0;
@@ -581,10 +721,7 @@ function renderStatusAndActivePills(filtered, copy) {
     btn.addEventListener('click', () => activePills[idx]?.clear());
   });
 
-  const resetBtn = document.getElementById('reset-all-filters-btn');
-  if (resetBtn) {
-    resetBtn.addEventListener('click', resetAllFilters);
-  }
+  document.getElementById('reset-all-filters-btn')?.addEventListener('click', resetAllFilters);
 }
 
 function renderAll() {
@@ -595,7 +732,6 @@ function renderAll() {
   const filtered = getFilteredPlaces();
   renderStatusAndActivePills(filtered, copy);
 
-  // Saved counter badge
   const savedBadge = document.getElementById('saved-count-badge');
   const savedBtn = document.getElementById('saved-filter-btn');
   if (savedBadge) {
@@ -607,7 +743,6 @@ function renderAll() {
     savedBtn.setAttribute('aria-pressed', String(state.savedOnly));
   }
 
-  // Workspace mode
   const workspace = document.getElementById('catalog-workspace');
   const mapPanel = document.getElementById('map-panel');
   const container = document.getElementById('listings-container');
@@ -645,14 +780,24 @@ function renderAll() {
 /* ---------- Detail Drawer Logic ---------- */
 let lastFocusedElement = null;
 
-function openDetailDrawer(placeId, pushHash = true) {
+function openDetailDrawer(placeId, pushHash = true, keepFocus = false) {
   const place = enrichedPlaces.find((p) => p.id === placeId);
   if (!place) return;
 
-  lastFocusedElement = document.activeElement;
+  if (!keepFocus) {
+    lastFocusedElement = document.activeElement;
+  }
   state.activePlaceId = placeId;
   const copy = COPY[state.lang];
   const isSaved = state.savedIds.has(place.id);
+
+  const { primary, secondary } = getPlaceTitleParts(place);
+  const subcat = getPlaceSubcategory(place);
+  const originBadge = getPlaceOriginBadge(place);
+  const summaryText = getPlaceSummary(place);
+  const highlightsList = getPlaceHighlights(place);
+  const addressText = getPlaceAddress(place);
+  const hoursText = getPlaceHours(place);
 
   const headerEl = document.getElementById('drawer-header-content');
   const bodyEl = document.getElementById('drawer-body');
@@ -666,11 +811,11 @@ function openDetailDrawer(placeId, pushHash = true) {
   headerEl.innerHTML = `
     <div class="card-cat-pill" style="margin-bottom:0.35rem;">
       <span class="cat-dot" data-cat="${escapeHtml(place.category)}"></span>
-      <span>${escapeHtml(getCategoryLabel(place.category))} · ${escapeHtml(place.subcategory)}</span>
+      <span>${escapeHtml(getCategoryLabel(place.category))} · ${escapeHtml(subcat)}</span>
     </div>
     <h2 id="drawer-place-title" style="margin:0;font-family:var(--font-serif);font-size:1.45rem;line-height:1.2;">
-      ${escapeHtml(place.name)}
-      ${place.nativeName ? `<span style="display:block;font-family:var(--font-sans);font-size:1rem;font-weight:500;color:var(--text-tertiary);margin-top:0.2rem;">${escapeHtml(place.nativeName)}</span>` : ''}
+      ${escapeHtml(primary)}
+      ${secondary ? `<span style="display:block;font-family:var(--font-sans);font-size:0.98rem;font-weight:500;color:var(--text-tertiary);margin-top:0.22rem;">${escapeHtml(secondary)}</span>` : ''}
     </h2>
   `;
 
@@ -690,14 +835,14 @@ function openDetailDrawer(placeId, pushHash = true) {
             </div>
           </div>
           <a href="${escapeHtml(buildGoogleMapsSearchUrl(place))}" target="_blank" rel="noopener noreferrer" class="card-btn">
-            Read on Google Maps ↗
+            ${escapeHtml(copy.readOnGoogleMaps)}
           </a>
         </div>
         <div style="font-size:0.74rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);margin-bottom:0.3rem;">
           ${escapeHtml(copy.googleSummaryHeading)}
         </div>
-        <p style="margin:0;font-size:0.92rem;line-height:1.6;color:var(--text-primary);">
-          ${escapeHtml(place.reviewSummary)}
+        <p style="margin:0;font-size:0.92rem;line-height:1.62;color:var(--text-primary);">
+          ${escapeHtml(summaryText)}
         </p>
       </div>
     `
@@ -706,23 +851,29 @@ function openDetailDrawer(placeId, pushHash = true) {
         <div style="font-size:0.78rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);margin-bottom:0.35rem;">
           ${escapeHtml(copy.noGoogleRating)}
         </div>
-        <p style="margin:0;font-size:0.92rem;line-height:1.6;color:var(--text-primary);">
-          ${escapeHtml(place.reviewSummary)}
+        <p style="margin:0;font-size:0.92rem;line-height:1.62;color:var(--text-primary);">
+          ${escapeHtml(summaryText)}
         </p>
       </div>
     `;
 
   const estDriveMin = Math.max(4, Math.round(place.dist98074 * 1.65 + 4));
+  const distBadgeDrawer = state.lang === 'zh'
+    ? `距邮编 98074 约 ${place.dist98074} 英里`
+    : `${place.dist98074} mi from ZIP 98074`;
+  const driveEstDrawer = state.lang === 'zh'
+    ? `（日常车程约 ${estDriveMin} 分钟）`
+    : `(~${estDriveMin} min typical drive)`;
 
   bodyEl.innerHTML = `
     ${googleHeroHtml}
 
     ${
-      place.highlights && place.highlights.length
+      highlightsList.length
         ? `<div style="margin-bottom:1.25rem;">
             <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);margin-bottom:0.45rem;">${escapeHtml(copy.highlightsLabel)}</div>
             <div class="card-highlights" style="margin:0;">
-              ${place.highlights.map((h) => `<span class="highlight-chip" style="font-size:0.8rem;padding:0.28rem 0.65rem;">${escapeHtml(h)}</span>`).join('')}
+              ${highlightsList.map((h) => `<span class="highlight-chip" style="font-size:0.8rem;padding:0.28rem 0.65rem;">${escapeHtml(h)}</span>`).join('')}
             </div>
           </div>`
         : ''
@@ -732,7 +883,7 @@ function openDetailDrawer(placeId, pushHash = true) {
       <div class="drawer-info-row">
         <span class="drawer-info-label">${escapeHtml(copy.addressLabel)}</span>
         <div>
-          <div style="font-weight:600;">${escapeHtml(place.address || `${place.city}, WA ${place.zip || ''}`)}</div>
+          <div style="font-weight:600;">${escapeHtml(addressText)}</div>
           <button type="button" id="drawer-copy-addr-btn" class="clear-all-btn" style="padding:0;font-size:0.78rem;margin-top:0.2rem;">
             ${escapeHtml(copy.copyAddress)}
           </button>
@@ -742,21 +893,21 @@ function openDetailDrawer(placeId, pushHash = true) {
       <div class="drawer-info-row">
         <span class="drawer-info-label">${escapeHtml(copy.distanceLabel)}</span>
         <div>
-          <span class="distance-badge">${place.dist98074} mi from ZIP 98074</span>
-          <span style="font-size:0.82rem;color:var(--text-tertiary);margin-left:0.4rem;">(~${estDriveMin} min typical drive)</span>
+          <span class="distance-badge">${escapeHtml(distBadgeDrawer)}</span>
+          <span style="font-size:0.82rem;color:var(--text-tertiary);margin-left:0.4rem;">${escapeHtml(driveEstDrawer)}</span>
         </div>
       </div>
 
       <div class="drawer-info-row">
         <span class="drawer-info-label">${escapeHtml(copy.originLabel)}</span>
-        <div>${escapeHtml(place.origin)} · ${escapeHtml(place.subcategory)} ${place.priceLevel ? `· <strong>${escapeHtml(place.priceLevel)}</strong>` : ''}</div>
+        <div>${escapeHtml(originBadge)} · ${escapeHtml(subcat)} ${place.priceLevel ? `· <strong>${escapeHtml(place.priceLevel)}</strong>` : ''}</div>
       </div>
 
       ${
-        place.hours
+        hoursText
           ? `<div class="drawer-info-row">
               <span class="drawer-info-label">${escapeHtml(copy.hoursLabel)}</span>
-              <div>${escapeHtml(place.hours)}</div>
+              <div>${escapeHtml(hoursText)}</div>
             </div>`
           : ''
       }
@@ -773,7 +924,7 @@ function openDetailDrawer(placeId, pushHash = true) {
       ${
         place.website
           ? `<div class="drawer-info-row">
-              <span class="drawer-info-label">Website</span>
+              <span class="drawer-info-label">${escapeHtml(copy.websiteLabel)}</span>
               <div><a href="${escapeHtml(place.website)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent-primary);font-weight:600;word-break:break-all;">${escapeHtml(place.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''))} ↗</a></div>
             </div>`
           : ''
@@ -789,7 +940,7 @@ function openDetailDrawer(placeId, pushHash = true) {
       ${escapeHtml(copy.directions98074)}
     </a>
     <button type="button" class="drawer-cta" id="drawer-bookmark-btn" style="flex:0 1 auto;">
-      ${isSaved ? '★ Saved' : '☆ Save'}
+      ${escapeHtml(isSaved ? copy.savedStateBtn : copy.saveActionBtn)}
     </button>
   `;
 
@@ -801,7 +952,7 @@ function openDetailDrawer(placeId, pushHash = true) {
 
   document.getElementById('drawer-bookmark-btn')?.addEventListener('click', () => {
     toggleBookmark(place.id);
-    openDetailDrawer(place.id, false);
+    openDetailDrawer(place.id, false, true);
   });
 
   closeModalsOnly();
@@ -815,7 +966,9 @@ function openDetailDrawer(placeId, pushHash = true) {
     history.replaceState(null, '', `#place=${encodeURIComponent(place.id)}`);
   }
 
-  document.getElementById('drawer-close-btn')?.focus();
+  if (!keepFocus) {
+    document.getElementById('drawer-close-btn')?.focus();
+  }
 }
 
 function closeModalsOnly() {
@@ -847,7 +1000,7 @@ function closeAllOverlays() {
   }
 }
 
-/* ---------- Bookmarks, Theme & Language ---------- */
+/* ---------- Bookmarks, Theme & Complete Language Application ---------- */
 let toastTimer = null;
 function showToast(msg) {
   const el = document.getElementById('toast-banner');
@@ -892,14 +1045,21 @@ function applyTheme(theme) {
 }
 
 function applyLanguage(lang) {
-  state.lang = lang;
-  localStorage.setItem('sap-lang', lang);
-  const c = COPY[lang];
+  state.lang = lang === 'zh' ? 'zh' : 'en';
+  localStorage.setItem('sap-lang', state.lang);
+  const c = COPY[state.lang];
 
-  document.documentElement.setAttribute('lang', lang === 'zh' ? 'zh-Hant' : 'en');
-  document.getElementById('lang-toggle-label').textContent = lang === 'zh' ? 'EN' : '中文';
+  document.documentElement.setAttribute('lang', state.lang === 'zh' ? 'zh-CN' : 'en');
+  document.title = c.pageTitle;
+
+  // Update segmented English | 中文 buttons
+  document.querySelectorAll('[data-lang-opt]').forEach((btn) => {
+    const active = btn.getAttribute('data-lang-opt') === state.lang;
+    btn.setAttribute('aria-pressed', String(active));
+  });
 
   const textMap = {
+    'ui-skip-link': c.skipLink,
     'ui-brand-title': c.brandTitle,
     'ui-brand-subtitle': c.brandSubtitle,
     'ui-saved-label': c.savedBtn,
@@ -912,6 +1072,16 @@ function applyLanguage(lang) {
     'ui-metric-radius': c.metricRadius,
     'ui-metric-avg': c.metricAvgRating,
     'ui-popular-label': c.popularLabel,
+    'ui-quick-near': c.quickNear,
+    'ui-quick-viet': c.quickViet,
+    'ui-quick-thai': c.quickThai,
+    'ui-quick-dimsum': c.quickDimSum,
+    'ui-quick-stores': c.quickStores,
+    'ui-quick-barbers': c.quickBarbers,
+    'ui-quick-nanny': c.quickNanny,
+    'ui-quick-remodel': c.quickRemodel,
+    'ui-art-caption-left': c.artCaptionLeft,
+    'ui-art-caption-right': c.artCaptionRight,
     'ui-label-anchor': c.filterAnchor,
     'ui-label-distance': c.filterDistance,
     'ui-label-area': c.filterArea,
@@ -934,7 +1104,44 @@ function applyLanguage(lang) {
     'ui-view-cards': c.viewCards,
     'ui-view-table': c.viewTable,
     'ui-view-map': c.viewMap,
-    'ui-mobile-filters-btn': c.mobileFiltersBtn
+    'ui-mobile-filters-btn': c.mobileFiltersBtn,
+    // Mobile Filter Sheet
+    'mobile-filter-title': c.mobileFilterTitle,
+    'ui-m-anchor-label': c.mobileAnchorLabel,
+    'ui-m-radius-label': c.mobileRadiusLabel,
+    'm-dist-50': c.distAll,
+    'm-dist-6': c.dist6,
+    'm-dist-12': c.dist12,
+    'm-dist-20': c.dist20,
+    'm-dist-35': c.dist35,
+    'ui-m-area-label': c.mobileAreaLabel,
+    'ui-m-origin-label': c.mobileOriginLabel,
+    'ui-m-rating-label': c.mobileRatingLabel,
+    'm-rating-0': c.ratingShortAny,
+    'ui-m-sort-label': c.mobileSortLabel,
+    'm-opt-sort-rec': c.sortRecommended,
+    'm-opt-sort-rating': c.sortRating,
+    'm-opt-sort-reviews': c.sortReviews,
+    'm-opt-sort-nearest': c.sortNearest,
+    'mobile-reset-filters-btn': c.mobileResetBtn,
+    'mobile-apply-filters-btn': c.mobileApplyBtn,
+    // Footer
+    'ui-footer-brand-title': c.brandTitle,
+    'ui-footer-subtitle': c.footerSubtitle,
+    'ui-footer-about-desc': c.footerAboutDesc,
+    'ui-footer-hubs-heading': c.footerHubsHeading,
+    'ui-footer-hubs-list': c.footerHubsList,
+    'ui-footer-reviews-heading': c.footerReviewsHeading,
+    'ui-footer-reviews-desc': c.footerReviewsDesc,
+    'ui-footer-github-btn': c.footerGithubBtn,
+    // Suggest Modal
+    'suggest-modal-title': c.suggestTitle,
+    'suggest-modal-subtitle': c.suggestSubtitle,
+    'ui-sug-name-label': c.sugNameLabel,
+    'ui-sug-cat-label': c.sugCatLabel,
+    'ui-sug-city-label': c.sugCityLabel,
+    'ui-sug-notes-label': c.sugNotesLabel,
+    'ui-sug-submit-btn': c.sugSubmitBtn
   };
 
   Object.entries(textMap).forEach(([id, val]) => {
@@ -945,12 +1152,24 @@ function applyLanguage(lang) {
   const searchInput = document.getElementById('global-search-input');
   if (searchInput) searchInput.placeholder = c.searchPlaceholder;
 
+  const sugName = document.getElementById('sug-name');
+  const sugCity = document.getElementById('sug-city');
+  const sugNotes = document.getElementById('sug-maps');
+  if (sugName) sugName.placeholder = c.sugNamePlaceholder;
+  if (sugCity) sugCity.placeholder = c.sugCityPlaceholder;
+  if (sugNotes) sugNotes.placeholder = c.sugNotesPlaceholder;
+
   document.querySelectorAll('.mobile-controls-bar [data-view="cards"]').forEach((el) => { el.textContent = c.viewCards; });
   document.querySelectorAll('.mobile-controls-bar [data-view="table"]').forEach((el) => { el.textContent = c.viewTable; });
   document.querySelectorAll('.mobile-controls-bar [data-view="map"]').forEach((el) => { el.textContent = c.viewMap; });
 
   renderSelectOptions();
   renderAll();
+
+  // If detail drawer is currently open, re-render its content in the newly selected language!
+  if (state.activePlaceId) {
+    openDetailDrawer(state.activePlaceId, false, true);
+  }
 }
 
 function resetAllFilters() {
@@ -1007,13 +1226,14 @@ function syncInputs() {
 }
 
 function handleAnchorChange(newKey) {
+  const copy = COPY[state.lang];
   if (newKey === 'gps') {
     if (!navigator.geolocation) {
-      showToast('Geolocation not available on this device');
+      showToast(copy.gpsUnavailableToast);
       syncInputs();
       return;
     }
-    showToast('Detecting your location…');
+    showToast(copy.detectingGpsToast);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         state.gpsCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -1021,10 +1241,10 @@ function handleAnchorChange(newKey) {
         state.sortBy = 'nearest';
         syncInputs();
         renderAll();
-        showToast('Showing distances from your current location');
+        showToast(COPY[state.lang].gpsSuccessToast);
       },
       () => {
-        showToast('Location permission denied — keeping 98074 anchor');
+        showToast(COPY[state.lang].gpsDeniedToast);
         state.anchorKey = '98074';
         renderSelectOptions();
       },
@@ -1040,7 +1260,6 @@ function handleAnchorChange(newKey) {
 
 /* ---------- Event Wiring ---------- */
 function initEvents() {
-  // Search input
   const searchInput = document.getElementById('global-search-input');
   const clearBtn = document.getElementById('search-clear-btn');
 
@@ -1057,7 +1276,6 @@ function initEvents() {
     searchInput?.focus();
   });
 
-  // Keyboard shortcuts: '/' focuses search, 'Escape' closes overlays
   document.addEventListener('keydown', (e) => {
     if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName || '')) {
       e.preventDefault();
@@ -1067,29 +1285,31 @@ function initEvents() {
     }
   });
 
-  // Brand home reset
   document.getElementById('brand-home-link')?.addEventListener('click', (e) => {
     e.preventDefault();
     resetAllFilters();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  // Theme & Language toggles
   document.getElementById('theme-toggle-btn')?.addEventListener('click', () => {
     applyTheme(state.theme === 'dark' ? 'light' : 'dark');
   });
 
-  document.getElementById('lang-toggle-btn')?.addEventListener('click', () => {
-    applyLanguage(state.lang === 'zh' ? 'en' : 'zh');
+  // Explicit English | 中文 Segmented Language Option
+  document.querySelectorAll('[data-lang-opt]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const chosen = btn.getAttribute('data-lang-opt');
+      if (chosen && chosen !== state.lang) {
+        applyLanguage(chosen);
+      }
+    });
   });
 
-  // Saved toggle
   document.getElementById('saved-filter-btn')?.addEventListener('click', () => {
     state.savedOnly = !state.savedOnly;
     renderAll();
   });
 
-  // Category rail delegation
   document.getElementById('category-rail')?.addEventListener('click', (e) => {
     const tab = e.target.closest('[data-cat-id]');
     if (!tab) return;
@@ -1097,7 +1317,6 @@ function initEvents() {
     renderAll();
   });
 
-  // Quick-jump chips in masthead
   document.querySelectorAll('.quick-chip').forEach((chip) => {
     chip.addEventListener('click', () => {
       resetAllFilters();
@@ -1115,7 +1334,6 @@ function initEvents() {
     });
   });
 
-  // Desktop filter selects
   document.getElementById('select-anchor')?.addEventListener('change', (e) => handleAnchorChange(e.target.value));
   document.getElementById('mobile-select-anchor')?.addEventListener('change', (e) => handleAnchorChange(e.target.value));
 
@@ -1149,7 +1367,6 @@ function initEvents() {
     renderAll();
   });
 
-  // View mode switcher (both desktop & mobile)
   document.querySelectorAll('[data-view]').forEach((btn) => {
     btn.addEventListener('click', () => {
       state.viewMode = btn.getAttribute('data-view');
@@ -1158,7 +1375,6 @@ function initEvents() {
     });
   });
 
-  // Listings delegation (open detail drawer & bookmark)
   document.getElementById('listings-container')?.addEventListener('click', (e) => {
     const bmBtn = e.target.closest('[data-bookmark-id]');
     if (bmBtn) {
@@ -1217,10 +1433,7 @@ function initEvents() {
     renderAll();
   });
 
-  document.getElementById('mobile-reset-filters-btn')?.addEventListener('click', () => {
-    resetAllFilters();
-  });
-
+  document.getElementById('mobile-reset-filters-btn')?.addEventListener('click', resetAllFilters);
   document.getElementById('mobile-apply-filters-btn')?.addEventListener('click', closeAllOverlays);
   document.getElementById('mobile-filter-close-btn')?.addEventListener('click', closeAllOverlays);
 
@@ -1246,17 +1459,15 @@ function initEvents() {
     const notes = document.getElementById('sug-maps')?.value.trim() || '';
 
     const title = `[Directory Suggestion] ${name} (${cat} - ${city})`;
-    const body = `### Suggested East Asian Listing (≤ 50 miles of 98074)\n\n- **Name:** ${name}\n- **Category:** ${cat}\n- **City / Address:** ${city}\n- **Google Maps / Notes:**\n${notes || 'N/A'}\n`;
+    const body = `### Suggested Asian Listing (≤ 50 miles of 98074)\n\n- **Name:** ${name}\n- **Category:** ${cat}\n- **City / Address:** ${city}\n- **Google Maps / Notes:**\n${notes || 'N/A'}\n`;
     const issueUrl = `https://github.com/coastwalker/seattlepagesforasian/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
     window.open(issueUrl, '_blank', 'noopener,noreferrer');
     closeAllOverlays();
   });
 
-  // Shared Backdrop & Drawer Close
   document.getElementById('drawer-close-btn')?.addEventListener('click', closeAllOverlays);
   document.getElementById('overlay-backdrop')?.addEventListener('click', closeAllOverlays);
 
-  // URL Hash Deep-Link Support (#place=...)
   window.addEventListener('hashchange', checkHashDeepLink);
 }
 
