@@ -20,7 +20,7 @@ Anchored at **ZIP 98074 (Sammamish Plateau)** and covering **428 verified listin
 
 - **Google Maps Review Integration** — Displays average Google Maps star ratings, total review counts, reviewer highlight tags, consensus review summaries, and one-tap links to live Google Maps listings and directions from `98074`.
 - **Responsive Across Phone, Tablet & Desktop** — Mobile-first bottom-sheet drawers & filter sheets, adaptive tablet grids, and desktop split-view / index table modes.
-- **Light & Dark Themes** — Zero-flash automatic system theme detection (`prefers-color-scheme`) with persistent manual toggle (*Washi & Cedar* light theme / *Sumi & Lantern* dark theme).
+- **Light & Dark Themes** — Defaults to the warm *Washi & Cedar* light theme regardless of OS dark mode, with an instant header toggle to switch to the *Sumi & Lantern* dark theme anytime.
 - **Bilingual Interface (`EN` / `中文`)** — Switch UI labels seamlessly while searching across English, Chinese, Japanese, Korean, Vietnamese, or Thai keywords.
 - **Interactive 50-Mile Map** — Leaflet map mode with theme-synced light/dark tiles and a visual 50-mile boundary around `98074`.
 

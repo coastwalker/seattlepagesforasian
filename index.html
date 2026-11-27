@@ -16,13 +16,13 @@
 
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
 
-  <!-- Synchronous Theme Init (Zero FOUC) -->
+  <!-- Synchronous Theme Init (Default Light; Zero FOUC) -->
   <script>
     (function () {
       try {
-        var saved = localStorage.getItem('sap-theme');
-        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        var theme = saved === 'dark' || saved === 'light' ? saved : (prefersDark ? 'dark' : 'light');
+        localStorage.removeItem('sap-theme');
+        var saved = localStorage.getItem('sap-user-theme');
+        var theme = saved === 'dark' ? 'dark' : 'light';
         document.documentElement.setAttribute('data-theme', theme);
         var meta = document.getElementById('meta-theme-color');
         if (meta) meta.setAttribute('content', theme === 'dark' ? '#11161c' : '#f8f5ef');

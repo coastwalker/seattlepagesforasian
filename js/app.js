@@ -1061,21 +1061,24 @@ function toggleBookmark(placeId) {
   renderAll();
 }
 
-function applyTheme(theme) {
-  state.theme = theme;
-  document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('sap-theme', theme);
+function applyTheme(theme, persist = false) {
+  const normalized = theme === 'dark' ? 'dark' : 'light';
+  state.theme = normalized;
+  document.documentElement.setAttribute('data-theme', normalized);
+  if (persist) {
+    localStorage.setItem('sap-user-theme', normalized);
+  }
 
   const sun = document.getElementById('theme-icon-sun');
   const moon = document.getElementById('theme-icon-moon');
   if (sun && moon) {
-    sun.hidden = theme !== 'dark';
-    moon.hidden = theme === 'dark';
+    sun.hidden = normalized !== 'dark';
+    moon.hidden = normalized === 'dark';
   }
 
   const meta = document.getElementById('meta-theme-color');
   if (meta) {
-    meta.setAttribute('content', theme === 'dark' ? '#11161c' : '#f8f5ef');
+    meta.setAttribute('content', normalized === 'dark' ? '#11161c' : '#f8f5ef');
   }
 
   updateMapTileTheme();
@@ -1398,7 +1401,7 @@ function initEvents() {
   });
 
   document.getElementById('theme-toggle-btn')?.addEventListener('click', () => {
-    applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+    applyTheme(state.theme === 'dark' ? 'light' : 'dark', true);
   });
 
   // Explicit English | 中文 Segmented Language Option
