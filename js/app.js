@@ -70,10 +70,11 @@ const CAT_ICONS_TEXT = {
 /* ---------- Application State ---------- */
 const urlParams = new URLSearchParams(window.location.search);
 const initialLangParam = urlParams.get('lang');
-const savedLang = localStorage.getItem('sap-lang');
+localStorage.removeItem('sap-lang');
+const savedLang = localStorage.getItem('sap-user-lang');
 
 const state = {
-  lang: initialLangParam === 'zh' || initialLangParam === 'en' ? initialLangParam : (savedLang === 'zh' ? 'zh' : 'en'),
+  lang: initialLangParam === 'zh' || initialLangParam === 'en' ? initialLangParam : (savedLang === 'en' ? 'en' : 'zh'),
   theme: document.documentElement.getAttribute('data-theme') || 'light',
   query: '',
   category: 'all',
@@ -1084,9 +1085,11 @@ function applyTheme(theme, persist = false) {
   updateMapTileTheme();
 }
 
-function applyLanguage(lang) {
-  state.lang = lang === 'zh' ? 'zh' : 'en';
-  localStorage.setItem('sap-lang', state.lang);
+function applyLanguage(lang, persist = false) {
+  state.lang = lang === 'en' ? 'en' : 'zh';
+  if (persist) {
+    localStorage.setItem('sap-user-lang', state.lang);
+  }
   const c = COPY[state.lang];
 
   document.documentElement.setAttribute('lang', state.lang === 'zh' ? 'zh-CN' : 'en');
@@ -1404,12 +1407,12 @@ function initEvents() {
     applyTheme(state.theme === 'dark' ? 'light' : 'dark', true);
   });
 
-  // Explicit English | 中文 Segmented Language Option
+  // Explicit 中文 | English Segmented Language Option
   document.querySelectorAll('[data-lang-opt]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const chosen = btn.getAttribute('data-lang-opt');
       if (chosen && chosen !== state.lang) {
-        applyLanguage(chosen);
+        applyLanguage(chosen, true);
       }
     });
   });

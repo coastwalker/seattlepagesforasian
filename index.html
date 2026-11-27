@@ -1,31 +1,38 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="zh-CN" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Seattle Asian Pages — Asian Directory Within 50 Miles of 98074</title>
-  <meta name="description" content="Curated East &amp; Southeast Asian catalog within 50 miles of Sammamish (ZIP 98074): Chinese, Taiwanese, Japanese, Korean, Vietnamese, and Thai restaurants, supermarkets, bakeries &amp; coffee, barbers &amp; salons, postpartum yuesao &amp; family care, house remodelers, and Thai massage &amp; TCM clinics with Google Maps ratings." />
+  <title>西雅图亚洲生活黄页 — 98074 方圆 50 英里生活与服务全中文目录</title>
+  <meta name="description" content="大西雅图与东区亚洲生活指南（邮编 98074 方圆 50 英里）：全面收录中式、台式、日式、韩式、越式与泰式餐厅美食、华人及亚洲超市、烘焙茶饮咖啡、理发美发、华人月嫂家政、房屋装修建材与泰式按摩中医诊所，整合 Google 地图真实评分与口碑摘要。" />
   <meta name="theme-color" content="#f8f5ef" id="meta-theme-color" />
 
   <!-- Open Graph / Social -->
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Seattle Asian Pages · 50-Mile Asian Index Around 98074" />
-  <meta property="og:description" content="Explore verified Chinese, Taiwanese, Japanese, Korean, Vietnamese, and Thai restaurants, stores, bakeries, barbers, house nannies, and remodelers within 50 miles of 98074—with Google Maps ratings &amp; review takeaways." />
+  <meta property="og:title" content="西雅图亚洲生活黄页 · Seattle Asian Pages (98074 · 50mi)" />
+  <meta property="og:description" content="全面收录 98074 方圆 50 英里内中式、台式、日式、韩式、越式与泰式餐厅、超市、烘焙、理发、月嫂家政与装修服务，附 Google 地图评分与评论摘要。" />
   <meta property="og:image" content="assets/hero-pnw-asian.jpg" />
   <meta name="twitter:card" content="summary_large_image" />
 
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
 
-  <!-- Synchronous Theme Init (Default Light; Zero FOUC) -->
+  <!-- Synchronous Theme & Language Init (Default Light + Default 中文; Zero FOUC) -->
   <script>
     (function () {
       try {
         localStorage.removeItem('sap-theme');
-        var saved = localStorage.getItem('sap-user-theme');
-        var theme = saved === 'dark' ? 'dark' : 'light';
+        localStorage.removeItem('sap-lang');
+        var savedTheme = localStorage.getItem('sap-user-theme');
+        var theme = savedTheme === 'dark' ? 'dark' : 'light';
         document.documentElement.setAttribute('data-theme', theme);
         var meta = document.getElementById('meta-theme-color');
         if (meta) meta.setAttribute('content', theme === 'dark' ? '#11161c' : '#f8f5ef');
+
+        var params = new URLSearchParams(window.location.search);
+        var urlLang = params.get('lang');
+        var savedLang = localStorage.getItem('sap-user-lang');
+        var lang = (urlLang === 'en' || urlLang === 'zh') ? urlLang : (savedLang === 'en' ? 'en' : 'zh');
+        document.documentElement.setAttribute('lang', lang === 'en' ? 'en' : 'zh-CN');
       } catch (e) {}
     })();
   </script>
@@ -48,8 +55,8 @@
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "Seattle Asian Pages",
-    "description": "Comprehensive Asian directory and Google review index within 50 miles of Sammamish, WA (ZIP 98074), covering Chinese, Taiwanese, Japanese, Korean, Vietnamese, and Thai businesses and services.",
+    "name": "西雅图亚洲生活黄页 · Seattle Asian Pages",
+    "description": "Comprehensive bilingual (中文 / English) Asian directory and Google review index within 50 miles of Sammamish, WA (ZIP 98074), covering Chinese, Taiwanese, Japanese, Korean, Vietnamese, and Thai businesses and services.",
     "areaServed": {
       "@type": "GeoCircle",
       "geoMidpoint": {
@@ -64,16 +71,16 @@
   </script>
 </head>
 <body>
-  <a href="#catalog-results-anchor" class="sr-only" id="ui-skip-link">Skip to directory listings</a>
+  <a href="#catalog-results-anchor" class="sr-only" id="ui-skip-link">跳至商家名录列表</a>
 
   <!-- Sticky Global Header -->
   <header class="site-header" id="site-header">
     <div class="container header-inner">
-      <a href="#" class="brand-link" id="brand-home-link" aria-label="Seattle Asian Pages Home">
+      <a href="#" class="brand-link" id="brand-home-link" aria-label="西雅图亚洲生活黄页 · Seattle Asian Pages">
         <span class="brand-seal" aria-hidden="true">東</span>
         <span class="brand-text">
-          <span class="brand-title" id="ui-brand-title">Seattle Asian Pages</span>
-          <span class="brand-subtitle" id="ui-brand-subtitle">50-Mile Asian Index · Anchored at 98074</span>
+          <span class="brand-title" id="ui-brand-title">西雅图亚洲生活黄页</span>
+          <span class="brand-subtitle" id="ui-brand-subtitle">98074 为中心 · 50英里东亚与越泰生活索引</span>
         </span>
       </a>
 
@@ -86,7 +93,7 @@
           type="search"
           id="global-search-input"
           class="header-search-input"
-          placeholder="Search phở, Thai, dim sum, grocers, barbers, yuesao, remodelers…"
+          placeholder="搜索越南河粉、泰餐、早茶点心、华人超市、理发、月嫂、装修建材…"
           autocomplete="off"
           aria-label="Search Asian businesses, services, dishes, or cities"
         />
@@ -97,18 +104,18 @@
       </div>
 
       <div class="header-actions">
-        <button type="button" id="saved-filter-btn" class="icon-pill-btn" aria-pressed="false" title="View saved shortlist">
+        <button type="button" id="saved-filter-btn" class="icon-pill-btn" aria-pressed="false" title="查看个人收藏夹 / View saved shortlist">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
           </svg>
-          <span class="btn-label-desktop" id="ui-saved-label">Saved</span>
+          <span class="btn-label-desktop" id="ui-saved-label">收藏夹</span>
           <span class="saved-count-badge tabular-nums" id="saved-count-badge" hidden>0</span>
         </button>
 
-        <!-- Explicit English | 中文 Language Option -->
-        <div class="lang-switch" role="group" aria-label="Language selection / 语言选择">
-          <button type="button" class="lang-opt-btn" id="lang-btn-en" data-lang-opt="en" aria-pressed="true">English</button>
-          <button type="button" class="lang-opt-btn" id="lang-btn-zh" data-lang-opt="zh" aria-pressed="false">中文</button>
+        <!-- Explicit 中文 | English Language Option (Default 中文) -->
+        <div class="lang-switch" role="group" aria-label="语言选择 / Language selection">
+          <button type="button" class="lang-opt-btn" id="lang-btn-zh" data-lang-opt="zh" aria-pressed="true">中文</button>
+          <button type="button" class="lang-opt-btn" id="lang-btn-en" data-lang-opt="en" aria-pressed="false">English</button>
         </div>
 
         <button type="button" id="theme-toggle-btn" class="icon-pill-btn icon-only-btn" aria-label="Toggle light and dark theme" title="Toggle light / dark theme">
@@ -121,9 +128,9 @@
           </svg>
         </button>
 
-        <button type="button" id="open-suggest-btn" class="icon-pill-btn" title="Suggest a place to add">
+        <button type="button" id="open-suggest-btn" class="icon-pill-btn" title="推荐商家 / Suggest a place to add">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-          <span class="btn-label-desktop" id="ui-suggest-label">Suggest Place</span>
+          <span class="btn-label-desktop" id="ui-suggest-label">推荐商家</span>
         </button>
       </div>
     </div>
@@ -134,43 +141,43 @@
     <section class="hero-masthead" aria-labelledby="ui-hero-title">
       <div class="container hero-grid">
         <div>
-          <p class="hero-eyebrow" id="ui-hero-eyebrow">Greater Seattle &amp; Eastside Directory · 50-Mile Radius of ZIP 98074</p>
-          <h1 class="hero-title" id="ui-hero-title">Every trusted Asian table, market, craft &amp; home service around Sammamish.</h1>
+          <p class="hero-eyebrow" id="ui-hero-eyebrow">大西雅图与东区生活指南 · 邮编 98074 方圆 50 英里全覆盖</p>
+          <h1 class="hero-title" id="ui-hero-title">汇聚萨马米什与大西雅图值得信赖的亚洲美食、超市、匠人与居家服务。</h1>
           <p class="hero-lead" id="ui-hero-lead">
-            A curated regional index spanning Chinese, Taiwanese, Japanese, Korean, Vietnamese, and Thai communities across Sammamish (98074), Bellevue, Redmond, Seattle, Lynnwood, Renton, Kent, and Tacoma—complete with verified Google Maps ratings and review takeaways.
+            全面收录中式、台式、日式、韩式、越式与泰式精选商家与生活服务，覆盖萨马米什 (98074)、贝尔维尤、雷德蒙德、西雅图、林伍德、伦顿、肯特与塔科马，整合 Google 地图真实评分、评论总数与口碑摘要。
           </p>
 
           <div class="hero-metrics" aria-label="Directory highlights">
             <div class="hero-metric">
               <strong class="tabular-nums" id="metric-total-places">--</strong>
-              <span id="ui-metric-places">Verified Places</span>
+              <span id="ui-metric-places">精选实体与服务</span>
             </div>
             <div class="hero-metric">
               <strong class="tabular-nums">7</strong>
-              <span id="ui-metric-categories">Daily-Life Pillars</span>
+              <span id="ui-metric-categories">核心生活分类</span>
             </div>
             <div class="hero-metric">
               <strong class="tabular-nums">≤ 50</strong>
-              <span id="ui-metric-radius">Mile Radius of 98074</span>
+              <span id="ui-metric-radius">英里覆盖 (98074)</span>
             </div>
             <div class="hero-metric">
-              <strong class="tabular-nums" id="metric-avg-rating">4.6★</strong>
-              <span id="ui-metric-avg">Avg Google Rating</span>
+              <strong class="tabular-nums" id="metric-avg-rating">4.42★</strong>
+              <span id="ui-metric-avg">Google 平均评分</span>
             </div>
           </div>
 
           <div class="quick-search-row" aria-label="Popular quick filters">
-            <span class="quick-search-label" id="ui-popular-label">Quick jumps:</span>
-            <button type="button" class="quick-chip" id="ui-quick-near" data-quick-cat="all" data-quick-dist="6">Near 98074 (≤ 6 mi)</button>
-            <button type="button" class="quick-chip" id="ui-quick-japanese" data-quick-origin="Japanese">Japanese</button>
-            <button type="button" class="quick-chip" id="ui-quick-korean" data-quick-origin="Korean">Korean</button>
-            <button type="button" class="quick-chip" id="ui-quick-viet" data-quick-origin="Vietnamese">Vietnamese</button>
-            <button type="button" class="quick-chip" id="ui-quick-thai" data-quick-origin="Thai">Thai</button>
-            <button type="button" class="quick-chip" id="ui-quick-dimsum" data-quick-query="Dim Sum">Dim Sum</button>
-            <button type="button" class="quick-chip" id="ui-quick-stores" data-quick-cat="stores">Supermarkets</button>
-            <button type="button" class="quick-chip" id="ui-quick-barbers" data-quick-cat="barbers">Hair &amp; Barber</button>
-            <button type="button" class="quick-chip" id="ui-quick-nanny" data-quick-cat="nanny">Yuesao &amp; Care</button>
-            <button type="button" class="quick-chip" id="ui-quick-remodel" data-quick-cat="remodel">Kitchen &amp; Remodel</button>
+            <span class="quick-search-label" id="ui-popular-label">快捷筛选：</span>
+            <button type="button" class="quick-chip" id="ui-quick-near" data-quick-cat="all" data-quick-dist="6">98074 周边 (≤ 6 英里)</button>
+            <button type="button" class="quick-chip" id="ui-quick-japanese" data-quick-origin="Japanese">日本 / 日式</button>
+            <button type="button" class="quick-chip" id="ui-quick-korean" data-quick-origin="Korean">韩国 / 韩式</button>
+            <button type="button" class="quick-chip" id="ui-quick-viet" data-quick-origin="Vietnamese">越南 / 越式</button>
+            <button type="button" class="quick-chip" id="ui-quick-thai" data-quick-origin="Thai">泰国 / 泰式</button>
+            <button type="button" class="quick-chip" id="ui-quick-dimsum" data-quick-query="Dim Sum">粤式早茶点心</button>
+            <button type="button" class="quick-chip" id="ui-quick-stores" data-quick-cat="stores">亚洲连锁超市</button>
+            <button type="button" class="quick-chip" id="ui-quick-barbers" data-quick-cat="barbers">理发与韩日烫染</button>
+            <button type="button" class="quick-chip" id="ui-quick-nanny" data-quick-cat="nanny">华人月嫂与家政</button>
+            <button type="button" class="quick-chip" id="ui-quick-remodel" data-quick-cat="remodel">厨房装修与建材</button>
           </div>
         </div>
 
@@ -186,8 +193,8 @@
             />
           </picture>
           <figcaption class="hero-artwork-caption">
-            <span id="ui-art-caption-left">Anchor: Sammamish, WA · ZIP 98074</span>
-            <span class="tabular-nums" id="ui-art-caption-right">50-Mile Radius</span>
+            <span id="ui-art-caption-left">中心锚点：华盛顿州萨马米什 · 邮编 98074</span>
+            <span class="tabular-nums" id="ui-art-caption-right">覆盖方圆 50 英里</span>
           </figcaption>
         </figure>
       </div>
