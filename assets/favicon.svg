@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Seattle Asian Pages Seal">
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="#c84323"/>
+  <rect x="8.5" y="8.5" width="47" height="47" rx="10" fill="none" stroke="#faf5ec" stroke-width="2" stroke-opacity="0.85"/>
+  <text x="32" y="43" text-anchor="middle" font-family="'Noto Serif SC', 'Songti SC', 'Georgia', serif" font-size="31" font-weight="700" fill="#faf5ec">東</text>
+</svg>
