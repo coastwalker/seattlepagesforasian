@@ -33,12 +33,12 @@ export const CATEGORIES = [
 
 export const AREA_GROUPS = [
   { id: 'all',              en: 'All Areas (≤ 50 mi)',                zh: '全部地区 (50英里内)',     cities: [] },
-  { id: 'sammamish-iss',    en: 'Sammamish & Issaquah',               zh: '萨马米什 / 伊萨夸',       cities: ['Sammamish', 'Issaquah', 'Fall City', 'Snoqualmie'] },
+  { id: 'sammamish-iss',    en: 'Sammamish & Issaquah',               zh: '萨马米什 / 伊萨夸',       cities: ['Sammamish', 'Issaquah', 'Fall City', 'Snoqualmie', 'North Bend'] },
   { id: 'redmond-kirkland', en: 'Redmond, Kirkland & Bothell',        zh: '雷德蒙德 / 柯克兰 / 博塞尔', cities: ['Redmond', 'Kirkland', 'Bothell', 'Woodinville', 'Kenmore'] },
   { id: 'bellevue',         en: 'Bellevue & Factoria',                zh: '贝尔维尤 / Factoria',     cities: ['Bellevue', 'Mercer Island', 'Newcastle'] },
   { id: 'seattle-central',  en: 'Seattle (CID, Little Saigon & City)',zh: '西雅图市区及中国城/小西贡', cities: ['Seattle', 'White Center'] },
-  { id: 'south-king',       en: 'Renton, Kent, Tukwila & Burien',     zh: '伦顿 / 肯特 / 塔克维拉',   cities: ['Renton', 'Kent', 'Tukwila', 'SeaTac', 'Auburn', 'Burien', 'Des Moines'] },
-  { id: 'north-sound',      en: 'Lynnwood, Edmonds & North',          zh: '林伍德 / 埃德蒙兹 / 北区', cities: ['Lynnwood', 'Edmonds', 'Shoreline', 'Mountlake Terrace', 'Everett', 'Mill Creek'] },
+  { id: 'south-king',       en: 'Renton, Kent, Tukwila & Burien',     zh: '伦顿 / 肯特 / 塔克维拉',   cities: ['Renton', 'Kent', 'Tukwila', 'SeaTac', 'Auburn', 'Burien', 'Des Moines', 'Covington'] },
+  { id: 'north-sound',      en: 'Lynnwood, Edmonds & North',          zh: '林伍德 / 埃德蒙兹 / 北区', cities: ['Lynnwood', 'Edmonds', 'Shoreline', 'Mountlake Terrace', 'Everett', 'Mill Creek', 'Mukilteo'] },
   { id: 'federal-tacoma',   en: 'Federal Way & Tacoma',               zh: '联邦大道 / 莱克伍德 / 塔科马', cities: ['Federal Way', 'Tacoma', 'Lakewood', 'Fife', 'Puyallup'] }
 ];
 
@@ -69,6 +69,9 @@ export const ORIGIN_BADGE_ZH = {
 export const CITY_ZH = {
   'Sammamish': '萨马米什',
   'Issaquah': '伊萨夸',
+  'Snoqualmie': '斯诺夸尔米',
+  'Fall City': '福尔城',
+  'North Bend': '北本德',
   'Redmond': '雷德蒙德',
   'Bellevue': '贝尔维尤',
   'Kirkland': '柯克兰',
@@ -84,14 +87,21 @@ export const CITY_ZH = {
   'Tukwila': '塔克维拉',
   'Burien': '布里恩',
   'SeaTac': '西塔科',
+  'Des Moines': '得梅因',
   'Auburn': '奥本',
+  'Covington': '卡温顿',
   'Lynnwood': '林伍德',
   'Edmonds': '埃德蒙兹',
   'Shoreline': '岸线市',
+  'Mountlake Terrace': '芒特莱克泰勒斯',
+  'Mill Creek': '米尔克里克',
+  'Mukilteo': '穆基尔蒂奥',
   'Everett': '埃弗里特',
   'Federal Way': '联邦大道',
+  'Fife': '法夫',
   'Lakewood': '莱克伍德',
-  'Tacoma': '塔科马'
+  'Tacoma': '塔科马',
+  'Puyallup': '皮阿拉普'
 };
 
 export const COPY = {

@@ -348,12 +348,41 @@ function refreshAnchorDistances() {
 }
 
 /* ---------- Filtering & Sorting ---------- */
+function computeQueryRelevance(p, rawQuery, tokens) {
+  if (tokens.length === 0) return 0;
+  const nameEn = (p.name || '').toLowerCase();
+  const nameZh = (p.nameZh || '').toLowerCase();
+  const native = (p.nativeName || '').toLowerCase();
+  const titleCombined = `${nameEn} ${nameZh} ${native}`;
+  const metaCombined = `${(p.city || '').toLowerCase()} ${CITY_ZH[p.city] || ''} ${p.zip || ''} ${(p.subcategory || '').toLowerCase()} ${(p.subcategoryZh || '').toLowerCase()} ${(p.origin || '').toLowerCase()}`;
+
+  let boost = 0;
+  if (rawQuery.length >= 2 && (nameEn === rawQuery || nameZh === rawQuery || native === rawQuery)) {
+    boost += 1000;
+  } else if (rawQuery.length >= 2 && (nameEn.startsWith(rawQuery) || nameZh.startsWith(rawQuery))) {
+    boost += 700;
+  } else if (rawQuery.length >= 2 && titleCombined.includes(rawQuery)) {
+    boost += 450;
+  }
+
+  const titleWords = titleCombined.split(/[^a-z0-9\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]+/).filter(Boolean);
+  for (const tok of tokens) {
+    if (titleWords.includes(tok)) {
+      boost += 300;
+    } else if (titleWords.some((w) => w.startsWith(tok))) {
+      boost += 180;
+    } else if (titleCombined.includes(tok)) {
+      boost += 110;
+    } else if (metaCombined.includes(tok)) {
+      boost += 45;
+    }
+  }
+  return boost;
+}
+
 function getFilteredPlaces() {
-  const tokens = state.query
-    .trim()
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(Boolean);
+  const rawQuery = state.query.trim().toLowerCase();
+  const tokens = rawQuery.split(/\s+/).filter(Boolean);
 
   const areaObj = AREA_GROUPS.find((a) => a.id === state.area);
 
@@ -389,6 +418,10 @@ function getFilteredPlaces() {
     return true;
   });
 
+  const queryScores = tokens.length > 0
+    ? new Map(filtered.map((p) => [p.id, computeQueryRelevance(p, rawQuery, tokens)]))
+    : null;
+
   filtered.sort((a, b) => {
     if (state.sortBy === 'rating') {
       const rDiff = (b.googleRating || 0) - (a.googleRating || 0);
@@ -400,6 +433,10 @@ function getFilteredPlaces() {
     }
     if (state.sortBy === 'nearest') {
       return a.distAnchor - b.distAnchor;
+    }
+    if (queryScores) {
+      const qDiff = (queryScores.get(b.id) || 0) - (queryScores.get(a.id) || 0);
+      if (qDiff !== 0) return qDiff;
     }
     return b.recScore - a.recScore;
   });

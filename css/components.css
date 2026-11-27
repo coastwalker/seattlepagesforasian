@@ -16,6 +16,8 @@
   position: relative;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 290px;
 }
 
 .place-card:hover {
