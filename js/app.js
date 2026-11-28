@@ -401,6 +401,8 @@ function getFilteredPlaces() {
       const pOrig = (p.origin || '').toLowerCase();
       if (state.origin === 'Pan-Asian') {
         if (!pOrig.includes('pan-asian') && !pOrig.includes('pan-east asian')) return false;
+      } else if (state.origin === 'Chinese') {
+        if (!pOrig.includes('chinese') && !pOrig.includes('cantonese') && !pOrig.includes('taiwanese')) return false;
       } else if (!pOrig.includes(state.origin.toLowerCase())) {
         return false;
       }
@@ -1116,6 +1118,7 @@ function applyLanguage(lang, persist = false) {
     'ui-metric-avg': c.metricAvgRating,
     'ui-popular-label': c.popularLabel,
     'ui-quick-near': c.quickNear,
+    'ui-quick-chinese': c.quickChinese,
     'ui-quick-japanese': c.quickJapanese,
     'ui-quick-korean': c.quickKorean,
     'ui-quick-viet': c.quickViet,
